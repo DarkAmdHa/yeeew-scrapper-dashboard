@@ -202,8 +202,8 @@ export default function DashboardLayout() {
                   <ul role="list" className="-mx-2 space-y-1">
                     {navigation.map((item) => (
                       <li key={item.name}>
-                        <a
-                          href={item.href}
+                        <Link
+                          to={item.href}
                           className={classNames(
                             location.pathname == item.href
                               ? "bg-gray-800 text-white"
@@ -216,7 +216,7 @@ export default function DashboardLayout() {
                             aria-hidden="true"
                           />
                           {item.name}
-                        </a>
+                        </Link>
                       </li>
                     ))}
                     <li>
