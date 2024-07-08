@@ -21,7 +21,7 @@ import OperationDetails from "./components/OperationDetails.jsx";
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <App />,
+    element: <LoginPage />,
     errorElement: <ErrorPage />,
   },
   {
