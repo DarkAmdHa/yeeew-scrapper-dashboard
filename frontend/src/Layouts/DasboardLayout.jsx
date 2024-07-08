@@ -47,7 +47,7 @@ function classNames(...classes) {
 }
 
 export default function DashboardLayout() {
-  const { setUser, setToken } = useContext(AppContext);
+  const { setUser, setToken, user } = useContext(AppContext);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const location = useLocation();
@@ -241,13 +241,14 @@ export default function DashboardLayout() {
                     href="#"
                     className="flex items-center gap-x-4 px-6 py-3 text-sm font-semibold leading-6 text-white hover:bg-gray-800"
                   >
-                    <img
+                    {/* <img
                       className="h-8 w-8 rounded-full bg-gray-800"
                       src="https://www.upwork.com/profile-portraits/c1Kt44ZGhdlzT6nkNg-PPPoMeZmToGaW16fNM2uBxqAAiL_58v4Lu9JVQyJB6V-7e7"
                       alt=""
-                    />
+                    /> */}
+                    <div className="w-12 h-12 border-4 rounded-full border-gray-400 bg-slate-700"></div>
                     <span className="sr-only">Your profile</span>
-                    <span aria-hidden="true">Hamid Tahir</span>
+                    {user && <span aria-hidden="true">{user.name}</span>}
                   </a>
                 </li>
               </ul>
