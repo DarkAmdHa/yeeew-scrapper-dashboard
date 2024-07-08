@@ -33,7 +33,8 @@ app.use("/api/operations", operationRoutes);
 app.use("/api/auth", authRoutes);
 // app.use("/api/scrapper", scrapperRoutes);
 
-cron.schedule("*/10 * * * * *", () => {
+cron.schedule("*/5 * * * *", () => {
+  //Every 5 minutes
   console.log("Running CRON job to check for operations");
   checkAndInitiateScrappingOperation();
   checkAndInitiateExportOperation();

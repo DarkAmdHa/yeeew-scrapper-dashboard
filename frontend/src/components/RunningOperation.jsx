@@ -35,7 +35,7 @@ export default function RunningOperation() {
     };
 
     fetchRunningOperation(true);
-    const interval = setInterval(fetchRunningOperation, 10000); // Poll every 10 seconds
+    const interval = setInterval(fetchRunningOperation, 60000); // Poll every minute
 
     return () => clearInterval(interval);
   }, []);
