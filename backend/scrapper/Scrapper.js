@@ -93,7 +93,6 @@ class Scrapper {
     listing.address = data.location || "";
     listing.summary = data.summary || "";
     listing.customSlug = data.slug || "";
-    listing.summary = data.summary || "";
 
     if (data.coordinates) {
       listing.longitude = data.coordinates.lng || "";
@@ -1088,8 +1087,8 @@ class Scrapper {
 
     const linksArr = Object.keys(links);
 
-    // for (var i = 0; i < linksArr.length; i++) {
-    for (var i = 0; i < 1; i++) {
+    for (var i = 0; i < linksArr.length; i++) {
+      // for (var i = 0; i < 1; i++) {
       const platformName = linksArr[i];
       const platformURL = links[linksArr[i]].platformURL;
       try {
