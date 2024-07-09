@@ -114,64 +114,224 @@ const ListingSchema = mongoose.Schema(
       type: String,
     },
     perfectWave: {
-      type: String,
+      highlights: {
+        type: String,
+      },
+      summary: {
+        type: String,
+      },
+      link: {
+        type: String,
+      },
     },
     luex: {
-      type: String,
+      highlights: {
+        type: String,
+      },
+      summary: {
+        type: String,
+      },
+      link: {
+        type: String,
+      },
     },
-    waterwaysSurf: {
-      type: String,
+    waterways: {
+      highlights: {
+        type: String,
+      },
+      summary: {
+        type: String,
+      },
+      link: {
+        type: String,
+      },
     },
     worldSurfaris: {
-      type: String,
+      highlights: {
+        type: String,
+      },
+      summary: {
+        type: String,
+      },
+      link: {
+        type: String,
+      },
     },
     awave: {
-      type: String,
+      highlights: {
+        type: String,
+      },
+      summary: {
+        type: String,
+      },
+      link: {
+        type: String,
+      },
     },
     atollTravel: {
-      type: String,
+      highlights: {
+        type: String,
+      },
+      summary: {
+        type: String,
+      },
+      link: {
+        type: String,
+      },
     },
     surfHolidays: {
-      type: String,
+      highlights: {
+        type: String,
+      },
+      summary: {
+        type: String,
+      },
+      link: {
+        type: String,
+      },
     },
     surfline: {
-      type: String,
+      highlights: {
+        type: String,
+      },
+      summary: {
+        type: String,
+      },
+      link: {
+        type: String,
+      },
     },
     lushPalm: {
-      type: String,
+      highlights: {
+        type: String,
+      },
+      summary: {
+        type: String,
+      },
+      link: {
+        type: String,
+      },
     },
     thermal: {
-      type: String,
+      highlights: {
+        type: String,
+      },
+      summary: {
+        type: String,
+      },
+      link: {
+        type: String,
+      },
     },
     bookSurfCamps: {
-      type: String,
+      highlights: {
+        type: String,
+      },
+      summary: {
+        type: String,
+      },
+      link: {
+        type: String,
+      },
     },
     nomadSurfers: {
-      type: String,
+      highlights: {
+        type: String,
+      },
+      summary: {
+        type: String,
+      },
+      link: {
+        type: String,
+      },
     },
     stokedSurfAdventures: {
-      type: String,
+      highlights: {
+        type: String,
+      },
+      summary: {
+        type: String,
+      },
+      link: {
+        type: String,
+      },
     },
     soulSurfTravel: {
-      type: String,
+      highlights: {
+        type: String,
+      },
+      summary: {
+        type: String,
+      },
+      link: {
+        type: String,
+      },
     },
     surfersHype: {
-      type: String,
+      highlights: {
+        type: String,
+      },
+      summary: {
+        type: String,
+      },
+      link: {
+        type: String,
+      },
     },
     expedia: {
-      type: String,
+      highlights: {
+        type: String,
+      },
+      summary: {
+        type: String,
+      },
+      link: {
+        type: String,
+      },
     },
-    bookingCom: {
-      type: String,
+    booking: {
+      highlights: {
+        type: String,
+      },
+      summary: {
+        type: String,
+      },
+      link: {
+        type: String,
+      },
     },
     agoda: {
-      type: String,
+      highlights: {
+        type: String,
+      },
+      summary: {
+        type: String,
+      },
+      link: {
+        type: String,
+      },
     },
-    tripCom: {
-      type: String,
+    trip: {
+      highlights: {
+        type: String,
+      },
+      summary: {
+        type: String,
+      },
+      link: {
+        type: String,
+      },
     },
     trivago: {
-      type: String,
+      highlights: {
+        type: String,
+      },
+      summary: {
+        type: String,
+      },
+      link: {
+        type: String,
+      },
     },
     scrapedImages: [
       {
@@ -184,7 +344,7 @@ const ListingSchema = mongoose.Schema(
     aboutAccomodation: {
       type: String,
     },
-    foodInclusions : {
+    foodInclusions: {
       type: String,
     },
     specificSurfSpots: {

@@ -219,8 +219,9 @@ class Scrapper {
       dataToProcess.forEach(function (item) {
         if (item.data) {
           listing[item.name] = {
-            highlights: item.data.highlights,
-            summary: item.data.textContent,
+            highlights: item.data.highlights ? item.data.highlights : "",
+            summary: item.data.textContent ? item.data.textContent : "",
+            link: item.data.link ? item.data.link : "",
           };
           if (item.data.images) {
             scrapedImagesArray.push(...item.data.images);
