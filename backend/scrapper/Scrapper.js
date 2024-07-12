@@ -112,7 +112,10 @@ class Scrapper {
     listing.summary = data.summary || "";
     listing.customSlug = data.slug || "";
 
-    if (data.coordinates) {
+    if (data.googleLatitude && data.googleLongitude) {
+      listing.longitude = data.googleLongitude;
+      listing.latitude = data.googleLatitude;
+    } else if (data.coordinates) {
       listing.longitude = data.coordinates.lng || "";
       listing.latitude = data.coordinates.lat || "";
     }
@@ -1063,7 +1066,7 @@ class Scrapper {
       const response = await this.openAiWithPrompts([
         {
           role: "user",
-          content: `Get the address and phone number of ${businessName} if listed in the following HTML code of the google page. If not found, just return a JSON with data: {}, else, return data:{phone: PHONENUMBER, address: ADDRESS}. The PHONENUMBER and ADDRESS should always be a string. If you find multiple phone numbers, just concatenate them with a ','. If there are multiple addresses, just select the first one.
+          content: `Get the address and phone number of ${businessName} if listed in the following HTML code of the google page. In some instances, you might also be able to pick up the latitude and longitude of the business (in case a link to Google Maps is present). In those cases, please also return the "latitude" and "longitude" in the JSON. Longitude and latitude are optional, and should only be returned if actually found in the code. If not found, just return a JSON with data: {}, else, return data:{phone: PHONENUMBER, address: ADDRESS, longitude: LONGITUDE, latitude: LATITUDE}. The PHONENUMBER and ADDRESS should always be a string. If you find multiple phone numbers, just concatenate them with a ','. If there are multiple addresses, just select the first one.
             Here is the html code: ${pageGoogleHTML}
           `,
         },
@@ -1078,6 +1081,12 @@ class Scrapper {
         if (businessData.data.phone_number)
           businessData.data.phone_number += ", " + data.phone;
         else businessData.data.phone_number = data.phone;
+      }
+      if (data.latitude) {
+        businessData.data.googleLatitude = data.latitude;
+      }
+      if (data.longitude) {
+        businessData.data.googleLongitude = data.longitude;
       }
     } catch (error) {
       console.error("Error scraping business details from Google:", error);
