@@ -500,7 +500,8 @@ export default function DashboardHome() {
                       to={`/dashboard/business/${item._id}`}
                       className="hidden py-4 pl-0 pr-8 text-sm leading-6 text-gray-400 md:flex lg:pr-20"
                     >
-                      {item.scrapedAt && new Date(item.scrapedAt)}
+                      {item.scrapedAt &&
+                        new Date(item.scrapedAt).toLocaleString()}
 
                       {!item.scrapedAt && (
                         <span className="text-gray-500">N/A</span>
