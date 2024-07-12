@@ -1,7 +1,13 @@
 import axios from "axios";
+import path from "path";
 import { mappedLocationStructure } from "./constants.js";
 import Operation from "../models/operationModel.js";
 import colors from "colors";
+import { amenitiesMasterList } from "./constants.js";
+
+import fetch from "node-fetch";
+import FormData from "form-data";
+import Listing from "../models/listingModel.js";
 
 class Export {
   constructor(businessData, operationId) {
@@ -10,6 +16,7 @@ class Export {
     this.operationId = operationId;
     this.jobListingTypeTaxonomy = [193];
     this.createdPostID = "";
+    this.featuredImageId = "";
 
     this.exportObject = {
       title: businessData.businessName ? businessData.businessName : "",
@@ -52,11 +59,48 @@ class Export {
         "inclusions_&_food": businessData.foodInclusions
           ? businessData.foodInclusions
           : "",
-        images_bucket: businessData.scrapedImages
-          ? JSON.stringify(businessData.scrapedImages)
-          : "",
       },
     };
+  }
+
+  async downloadImage(imageUrl) {
+    const response = await axios.get(imageUrl, {
+      responseType: "arraybuffer",
+    });
+    return Buffer.from(response.data, "binary");
+  }
+
+  async uploadImageToWordPress(imageData, imageName) {
+    const form = new FormData();
+    form.append("file", imageData, { filename: imageName });
+
+    const response = await fetch(
+      "https://yeewdev3.wpengine.com/wp-json/wp/v2/media",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Basic ${process.env.YEEEW_REST_API_PASSWORD}`,
+        },
+        body: form,
+      }
+    );
+
+    const data = await response.json();
+
+    return data.id;
+  }
+
+  async processImage(imageUrl) {
+    try {
+      const imageData = await this.downloadImage(imageUrl);
+      const fileExtension = path.extname(imageUrl);
+      const imageName = `image_${new Date().getTime()}${fileExtension}`;
+
+      const imageId = await this.uploadImageToWordPress(imageData, imageName);
+      this.featuredImageId = imageId;
+    } catch (error) {
+      console.error(`Error processing image: ${error}`.red);
+    }
   }
 
   async init() {
@@ -65,8 +109,13 @@ class Export {
       if (this.operationStatus != "cancelled") {
         //Keep going if the operation is not cancelled yet:
         this.processBusinessData();
+        //Upload featured Image:
+        if (this.businessData.scrapedImages.length) {
+          await this.processImage(this.businessData.scrapedImages[0]);
+        }
         await this.createBusinessOnYeeew();
         await this.addACFFieldsData();
+        await this.updateListing();
         await this.updateOperation();
       }
     } catch (error) {
@@ -99,6 +148,7 @@ class Export {
       this.exportFAQs();
       this.exportRooms();
       this.exportAmenities();
+      this.exportImagesToGallery();
       this.exportSurroundings();
       this.selectionLocationTaxonomies();
     } catch (error) {
@@ -119,6 +169,9 @@ class Export {
   }
 
   async createBusinessOnYeeew() {
+    if (this.featuredImageId) {
+      this.exportObject.featured_media = this.featuredImageId;
+    }
     try {
       const { data } = await axios.post(
         "https://yeewdev3.wpengine.com/wp-json/wp/v2/job_listing",
@@ -131,6 +184,7 @@ class Export {
         }
       );
       this.createdPostID = data.id;
+      console.log(`POST ID: ${data.id}`.green.inverse);
     } catch (error) {
       console.error(colors.red("Error creating business on Yeeew:" + error));
 
@@ -352,6 +406,40 @@ class Export {
     }
   }
 
+  getAmenitiesTaxonomyArray(amenities) {
+    if (!amenities.length) return null;
+
+    const amenitiesTaxonomies = amenities.map((amenity) =>
+      amenitiesMasterList.find(
+        (item) => item.name.toLowerCase() === amenity.toLowerCase()
+      )
+    );
+  }
+
+  getAmenitiesTaxonomyArray(amenities) {
+    if (!amenities.length) return null;
+
+    const amenitiesTaxonomies = amenities.map((amenity) =>
+      amenitiesMasterList.find(
+        (item) => item.name.toLowerCase() === amenity.toLowerCase()
+      )
+    );
+
+    return amenitiesTaxonomies
+      .filter((item) => item && item.id)
+      .map((item) => item.id.toString());
+  }
+
+  exportImagesToGallery() {
+    let images = this.businessData.scrapedImages;
+    if (images.length) {
+      //For now, just store names:
+      this.acfExportObject.acf["image_gallery"] = images.map((image) => ({
+        image_gallery_listing: image,
+      }));
+    }
+  }
+
   exportAmenities() {
     if (!this.businessData.propertyAmenitiesFromBooking) return;
 
@@ -360,12 +448,22 @@ class Export {
       if (repeaterAmenities.length) {
         //For now, just store names:
         this.acfExportObject.acf["property_amenities"] = repeaterAmenities.map(
-          (amenity) => ({
-            aminity_icon: null,
-            amenity_description: amenity.type,
-            amenity_list: null,
-          })
+          (amenity) => {
+            const amenitiesTaxonomyArr = this.getAmenitiesTaxonomyArray(
+              amenity.amenities
+            );
+
+            return {
+              aminity_icon: null,
+              amenity_description: amenity.type,
+              amenity_list: amenitiesTaxonomyArr.length
+                ? amenitiesTaxonomyArr
+                : null,
+            };
+          }
         );
+
+        console.log(this.acfExportObject.acf["property_amenities"]);
       }
     } catch (error) {
       console.error(colors.red("Error exporting amenities:" + error));
@@ -548,6 +646,37 @@ class Export {
     }
   }
 
+  async updateListing() {
+    try {
+      const exportedYeeewLink = `https://yeewdev3.wpengine.com/wp-admin/post.php?post=${this.createdPostID}&action=edit`;
+      const listing = await Listing.findByIdAndUpdate(
+        this.businessData._id,
+        {
+          $push: { exportLinks: exportedYeeewLink },
+          exported: true,
+        },
+        { new: true } // This option returns the modified document rather than the original
+      );
+
+      listing.save();
+
+      console.log("Listing updated with export link".green);
+    } catch (error) {
+      console.error(colors.red("Error updating listing:" + error));
+
+      if (error.response) {
+        await this.logError(
+          "Error updating listing:" + error.response.data.message
+            ? error.response.data.message
+            : error.message
+            ? error.message
+            : error
+        );
+      } else {
+        await this.logError("Error updating listing:" + error.message);
+      }
+    }
+  }
   async updateOperation() {
     try {
       const operation = await Operation.findByIdAndUpdate(

@@ -16,6 +16,7 @@ class Scrapper {
     this.operationId = operationId;
     this.scrapedData = {};
     this.operationStatus = "";
+    this.enoughData = false;
   }
 
   async init() {
@@ -24,7 +25,13 @@ class Scrapper {
       if (this.operationStatus != "cancelled") {
         //Keep going if the operation is not cancelled yet:
         await this.processBusinessData();
-        await this.saveScrapedData();
+        if (this.enoughData) {
+          await this.saveScrapedData();
+        } else {
+          await this.logError(
+            "No data about the business could be found, either on it's main site, or on any of the third party platforms. Please make sure the name is correct."
+          );
+        }
         await this.updateOperation();
         console.log(this.scrapedData);
       }
@@ -44,19 +51,26 @@ class Scrapper {
       this.businessData.businessName,
       this.businessData.businessURL
     );
+    this.scrapedData = await this.scrapeDataFromGoogle(
+      this.businessData.businessName,
+      this.scrapedData
+    );
     this.scrapedData = await this.scrapePlatforms(
       this.businessData,
       this.scrapedData
     );
-    this.scrapedData = await this.generateFinalContent(
-      this.businessData,
-      this.scrapedData
-    );
-    this.scrapedData = await this.buildBusinessSlug(
-      this.businessData,
-      this.scrapedData
-    );
-    this.scrapedData = await this.locateBusiness(this.scrapedData);
+    if (this.listingHasEnoughData(this.scrapedData)) {
+      //Only proceed if enough data was gathered
+      this.scrapedData = await this.generateFinalContent(
+        this.businessData,
+        this.scrapedData
+      );
+      this.scrapedData = await this.buildBusinessSlug(
+        this.businessData,
+        this.scrapedData
+      );
+      this.scrapedData = await this.locateBusiness(this.scrapedData);
+    }
   }
 
   async saveScrapedData() {
@@ -68,10 +82,10 @@ class Scrapper {
       }
 
       listing.scraped = true;
-
+      listing.scrapedAt = new Date();
       const scrapedFinalData = this.scrapedData.data;
       this.setupBusinessDocumentUpdate(listing, scrapedFinalData);
-      console.log(listing);
+      console.log(JSON.stringify(listing));
 
       await listing.save();
       console.log("Business data saved to the database");
@@ -90,7 +104,11 @@ class Scrapper {
     listing.phoneNumber = data.phone_number || "";
     listing.whatsappNumber = data.whatsapp_number || "";
     listing.contactName = data.contact_name || "";
-    listing.address = data.location || "";
+    listing.address = data.location
+      ? data.googleAddress
+      : data.location
+      ? data.location
+      : "";
     listing.summary = data.summary || "";
     listing.customSlug = data.slug || "";
 
@@ -1034,6 +1052,43 @@ class Scrapper {
     }
   };
 
+  async scrapeDataFromGoogle(businessName, businessData) {
+    try {
+      const link = `https://www.google.com/search?q=${encodeURIComponent(
+        businessName
+      )}`;
+
+      const pageGoogleHTML = await this.regularFetch(link);
+
+      const response = await this.openAiWithPrompts([
+        {
+          role: "user",
+          content: `Get the address and phone number of ${businessName} if listed in the following HTML code of the google page. If not found, just return a JSON with data: {}, else, return data:{phone: PHONENUMBER, address: ADDRESS}. The PHONENUMBER and ADDRESS should always be a string. If you find multiple phone numbers, just concatenate them with a ','. If there are multiple addresses, just select the first one.
+            Here is the html code: ${pageGoogleHTML}
+          `,
+        },
+      ]);
+
+      const { data } = JSON.parse(response);
+
+      if (data.address) {
+        businessData.data.googleAddress = data.address;
+      }
+      if (data.phone) {
+        if (businessData.data.phone_number)
+          businessData.data.phone_number += ", " + data.phone;
+        else businessData.data.phone_number = data.phone;
+      }
+    } catch (error) {
+      console.error("Error scraping business details from Google:", error);
+      businessData.errors.push("Main Site not working");
+      await this.logError(
+        `Error scraping business details from Google: ${error}`
+      );
+    }
+    return businessData;
+  }
+
   async scrapeBusinessSite(businessName, businessURL) {
     const prompts = await this.getPrompts();
 
@@ -1173,6 +1228,8 @@ class Scrapper {
 
     const businessName = originalData.businessName;
     // 4. Generate content
+
+    //Only if there is data:
     const content = await this.generateSEOContentWithGoogle(
       businessData,
       prompts.contentGenerationPromptWithJson,
@@ -1208,6 +1265,15 @@ class Scrapper {
     return businessData;
   };
 
+  listingHasEnoughData = (businessData) => {
+    const enoughData =
+      businessData.summary ||
+      (businessData.data.platformSummaries &&
+        Object.keys(businessData.data.platformSummaries).length);
+    this.enoughData = enoughData;
+    return enoughData;
+  };
+
   buildBusinessSlug = async (originalData, businessData) => {
     // const businessData2 = regionalOverviewSampleData;
     // res.json({ businessData: businessData2 });
@@ -1237,7 +1303,10 @@ class Scrapper {
     // res.json({ businessData: businessData2 });
     // return;
     try {
-      if (!businessData.data || !businessData.data.location)
+      if (
+        !businessData.data ||
+        (!businessData.data.location && !businessData.data.googleAddress)
+      )
         return businessData;
 
       // Google Maps Geocoding API endpoint

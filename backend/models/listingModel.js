@@ -368,6 +368,11 @@ const ListingSchema = mongoose.Schema(
       required: true,
       default: false,
     },
+    exported: {
+      type: Boolean,
+      default: false,
+    },
+    exportLinks: [{ type: String }],
     scrapedAt: {
       type: Date,
     },

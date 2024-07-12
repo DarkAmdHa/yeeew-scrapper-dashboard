@@ -14,6 +14,7 @@ import {
 } from "./scrapper/ScrapperCRON.js";
 
 import { errorHandler, notFound } from "./middleware/errorMiddleware.js";
+import Scrapper from "./scrapper/Scrapper.js";
 
 dotenv.config();
 

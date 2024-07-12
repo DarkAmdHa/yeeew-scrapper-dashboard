@@ -30,7 +30,7 @@ export default function DashboardHome() {
   const [confirm, setConfirm] = useState(false);
   const [confirm2, setConfirm2] = useState(false);
   const [confirm3, setConfirm3] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage] = useState(null);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -44,6 +44,8 @@ export default function DashboardHome() {
     const sortBy = searchParams.get("sortBy");
     if (page) {
       setCurrentPage(+page);
+    } else {
+      setCurrentPage(1);
     }
     if (sortBy) {
       setSortBy(sortBy);
@@ -172,7 +174,7 @@ export default function DashboardHome() {
   };
 
   useEffect(() => {
-    if (token) fetchListings();
+    if (token && currentPage) fetchListings();
   }, [currentPage, token, sortBy]);
 
   const fetchListings = async () => {
@@ -421,12 +423,12 @@ export default function DashboardHome() {
                 >
                   Scraped At
                 </th>
-                <th
+                {/* <th
                   scope="col"
                   className="hidden py-2 pl-0 pr-4 text-right font-semibold sm:table-cell sm:pr-6 lg:pr-8"
                 >
                   Time To Scrape
-                </th>
+                </th> */}
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
@@ -447,20 +449,22 @@ export default function DashboardHome() {
                       </Link>
                     </div>
                   </td>
-                  <td>
-                    <Link
-                      to={`/dashboard/business/${item._id}`}
-                      className="hidden py-4 pl-0 pr-4 sm:flex sm:pr-8"
-                    >
-                      <div className="flex gap-x-3">
-                        <div className="font-mono text-sm leading-6 text-blue-400 overflow-ellipsis max-w-12">
-                          {item.businessURL}
-                          <span className="text-gray-500">
-                            {!item.businessURL && "N/A"}
-                          </span>
+                  <td className="overflow-hidden">
+                    <div className="flex items-center gap-x-4   max-w-52">
+                      <Link
+                        to={`/dashboard/business/${item._id}`}
+                        className="hidden py-4 pl-0 pr-4 sm:flex sm:pr-8"
+                      >
+                        <div className="flex gap-x-3">
+                          <div className="font-mono text-sm leading-6 text-blue-400 overflow-ellipsis  break-words">
+                            {item.businessURL}
+                            <span className="text-gray-500">
+                              {!item.businessURL && "N/A"}
+                            </span>
+                          </div>
                         </div>
-                      </div>
-                    </Link>
+                      </Link>
+                    </div>
                   </td>
                   <td>
                     <Link
@@ -503,7 +507,7 @@ export default function DashboardHome() {
                       )}
                     </Link>
                   </td>
-                  <td>
+                  {/* <td>
                     <Link
                       to={`/dashboard/business/${item._id}`}
                       className="hidden py-4 pl-0 pr-4 text-right text-sm leading-6 text-gray-400 sm:flex sm:pr-6 lg:pr-8"
@@ -518,7 +522,7 @@ export default function DashboardHome() {
                         <span className="text-gray-500">N/A</span>
                       )}
                     </Link>
-                  </td>
+                  </td> */}
                 </tr>
               ))}
             </tbody>

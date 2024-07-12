@@ -76,49 +76,6 @@ export default function BusinessPage() {
     customSlug: "",
   });
 
-  const [imageUrls, setImageUrls] = useState([
-    {
-      src: "https://yeeew-scraper-bucket.s3.amazonaws.com/funky-fish-beach--surf-resort/landscape/1714094799568_image.jpg",
-      width: 800,
-      height: 600,
-    },
-    {
-      src: "https://yeeew-scraper-bucket.s3.amazonaws.com/funky-fish-beach--surf-resort/landscape/1714094803135_image.jpg",
-      width: 800,
-      height: 600,
-    },
-    {
-      src: "https://yeeew-scraper-bucket.s3.amazonaws.com/funky-fish-beach--surf-resort/others/1714094802634_image.jpg",
-      width: 800,
-      height: 600,
-    },
-    {
-      src: "https://yeeew-scraper-bucket.s3.amazonaws.com/funky-fish-beach--surf-resort/food/1714094802165_image.jpg",
-      width: 800,
-      height: 600,
-    },
-    {
-      src: "https://yeeew-scraper-bucket.s3.amazonaws.com/funky-fish-beach--surf-resort/landscape/1714094801672_image.jpg",
-      width: 800,
-      height: 600,
-    },
-    {
-      src: "https://yeeew-scraper-bucket.s3.amazonaws.com/funky-fish-beach--surf-resort/landscape/1714094801187_image.jpg",
-      width: 800,
-      height: 600,
-    },
-    {
-      src: "https://yeeew-scraper-bucket.s3.amazonaws.com/funky-fish-beach--surf-resort/accomodation/1714094800440_image.jpg",
-      width: 800,
-      height: 600,
-    },
-    {
-      src: "https://yeeew-scraper-bucket.s3.amazonaws.com/funky-fish-beach--surf-resort/accomodation/1714094800073_image.jpg",
-      width: 800,
-      height: 600,
-    },
-  ]);
-
   const handleSubmit = (e) => {};
   const handleChange = (e) => {};
   return (
@@ -141,6 +98,55 @@ export default function BusinessPage() {
         >
           <div className="px-4 py-6 sm:p-8">
             <div className="grid max-w-2xl grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
+              {(changeableListing.scraped || changeableListing.exported) && (
+                <div className="sm:col-span-6 gap-6 text-sm justify-end flex">
+                  {changeableListing.scraped && (
+                    <div className="flex items-center justify-end gap-x-2 sm:justify-start">
+                      <div className="text-green-400 bg-green-400/10 flex-none rounded-full p-1">
+                        <div className="h-1.5 w-1.5 rounded-full bg-current" />
+                      </div>
+                      <div className="text-green-400 hidden sm:block">
+                        Scraped
+                      </div>
+                    </div>
+                  )}
+
+                  {changeableListing.exported && (
+                    <div className="flex items-center justify-end gap-x-2 sm:justify-start">
+                      <div className="text-green-400 bg-green-400/10 flex-none rounded-full p-1">
+                        <div className="h-1.5 w-1.5 rounded-full bg-current" />
+                      </div>
+                      <div className="text-green-400 hidden sm:block">
+                        Exported
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {changeableListing.exportLinks &&
+              changeableListing.exportLinks.length ? (
+                <div className="sm:col-span-4">
+                  <div className="block text-sm font-medium leading-6 text-white">
+                    Yeeew! Listing
+                  </div>
+                  <ul className=" list-none mt-1">
+                    {changeableListing.exportLinks.map((link, index) => (
+                      <li key={link + "-" + index}>
+                        <a
+                          href={link}
+                          target="_blank"
+                          className="text-blue-500 underline text-xs"
+                        >
+                          {link}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : (
+                ""
+              )}
               <div className="sm:col-span-4">
                 <label
                   htmlFor="businessName"
