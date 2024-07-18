@@ -127,6 +127,10 @@ class ListingController {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 5;
     const sort = req.query.sort || "-createdAt";
+    let regionFilters = req.query.regionFilters || "";
+    if (regionFilters) {
+      regionFilters = regionFilters.split(",");
+    }
     const scraped =
       sort === "scraped" ? true : sort === "notScraped" ? false : null;
 
@@ -134,6 +138,12 @@ class ListingController {
 
     if (scraped !== null) {
       filters.scraped = scraped;
+    }
+
+    if (regionFilters.length > 0) {
+      filters.$or = regionFilters.map((region) => ({
+        customSlug: new RegExp(region, "i"),
+      }));
     }
 
     try {
@@ -144,7 +154,6 @@ class ListingController {
         .skip((page - 1) * limit)
         .limit(limit)
         .exec();
-      // .find(filters)
 
       const totalListings = await this.model.countDocuments(filters);
 

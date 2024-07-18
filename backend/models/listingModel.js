@@ -80,6 +80,17 @@ const ListingSchema = mongoose.Schema(
     roomsFromBooking: [roomSchema],
     propertyAmenitiesFromBooking: [amenitiesSchema],
     propertySurroundingsFromBooking: [propertySurroundingsSchema],
+    apiData: {
+      booking: {
+        id: {
+          type: String,
+          required: true,
+        },
+        data: {
+          type: String,
+        },
+      },
+    },
     location: {
       type: String,
     },

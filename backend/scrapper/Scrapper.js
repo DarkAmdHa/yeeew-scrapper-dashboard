@@ -9,6 +9,7 @@ import pt from "puppeteer";
 import Listing from "../models/listingModel.js";
 import Operation from "../models/operationModel.js";
 import Prompt from "../models/promptModel.js";
+import BookingAPIFetcher from "./BookingAPIFetcher.js";
 
 class Scrapper {
   constructor(businessData, operationId) {
@@ -59,6 +60,7 @@ class Scrapper {
       this.businessData,
       this.scrapedData
     );
+    this.scrapedData = await this.scrapeFromBookingAPI();
     if (this.listingHasEnoughData(this.scrapedData)) {
       //Only proceed if enough data was gathered
       this.scrapedData = await this.generateFinalContent(
@@ -99,6 +101,29 @@ class Scrapper {
     }
   }
 
+  async scrapeFromBookingAPI() {
+    try {
+      // Usage example:
+      const resortFetcher = new BookingAPIFetcher(
+        this.businessData.businessName
+      );
+      const apiResponse = await resortFetcher.init();
+
+      if (this.scrapedData.data.apiData) {
+        this.scrapedData.data.apiData.booking = apiResponse;
+      } else {
+        this.scrapedData.data.apiData = {
+          booking: apiResponse,
+        };
+      }
+    } catch {
+      console.log("Error encountered while fetching from API".red);
+      this.logError("Error encountered while fetching from API");
+    }
+
+    return this.scrapedData;
+  }
+
   setupBusinessDocumentUpdate(listing, data) {
     listing.email = data.contact_email || "";
     listing.phoneNumber = data.phone_number || "";
@@ -129,6 +154,10 @@ class Scrapper {
     }
 
     console.log(JSON.stringify(this.scrapedData));
+
+    if (data.apiData) {
+      listing.apiData = data.apiData;
+    }
 
     if (data.platformSummaries && data.platformSummaries["bookingData"]) {
       const bookingData = data.platformSummaries.bookingData;
@@ -235,6 +264,11 @@ class Scrapper {
           name: "surfersHype",
         },
       ];
+
+      //Images from main site:
+      if (data.imagesFromMain) {
+        scrapedImagesArray.push(...data.imagesFromMain);
+      }
 
       // Loop through the array and process the data
       dataToProcess.forEach(function (item) {
@@ -388,36 +422,50 @@ class Scrapper {
 
   async twoWayComm(link, prompts) {
     const maxIterations = +process.env.MAX_CRAWL_ITERATIONS || 6;
+    const imagesFromMain = [];
     let iteration = 1;
     const visitedLinks = [];
 
     let response = await this.siteInfoScrapper(link, prompts, undefined, true);
+
+    if (
+      response.uploadedImageLocations &&
+      response.uploadedImageLocations.length
+    )
+      imagesFromMain.push(...response.uploadedImageLocations);
     console.log(`Scraped ${link}`.green);
     visitedLinks.push(link);
     while (
-      response.nextLink &&
-      response.nextLink != "" &&
+      response.parsedJSONResponse.nextLink &&
+      response.parsedJSONResponse.nextLink != "" &&
       iteration < maxIterations
     ) {
       iteration++;
       const previousData = {
-        previousReturnedData: response.data,
+        previousReturnedData: response.parsedJSONResponse.data,
         visitedLinks,
       };
-      console.log(`Scraping Next Link: ${response.nextLink}`.green);
+      console.log(
+        `Scraping Next Link: ${response.parsedJSONResponse.nextLink}`.green
+      );
       response = await this.siteInfoScrapper(
-        response.nextLink,
+        response.parsedJSONResponse.nextLink,
         prompts,
         previousData,
         true
       );
-      visitedLinks.push(response.nextLink);
+      if (
+        response.uploadedImageLocations &&
+        response.uploadedImageLocations.length
+      )
+        imagesFromMain.push([...response.uploadedImageLocations]);
+      visitedLinks.push(response.parsedJSONResponse.nextLink);
     }
 
     console.log(
       `Final Data after scraping site: ${JSON.stringify(response)}`.green
     );
-    return response.data;
+    return { mainSiteData: response.parsedJSONResponse.data, imagesFromMain };
   }
 
   findListingOnGoogle = async (businessName, platform) => {
@@ -493,7 +541,9 @@ class Scrapper {
     dynamic,
     platformName = ""
   ) => {
-    const browser = await pt.launch();
+    const browser = await pt.launch({ headless: true });
+    
+
     const page = await browser.newPage();
 
     await page.setViewport({ width: 1000, height: 500 });
@@ -597,7 +647,7 @@ class Scrapper {
       images = await page.evaluate(() => {
         const imagesArray = [];
         document.querySelectorAll("img").forEach((image, index) => {
-          if (image.naturalWidth >= 1200 && index <= 20) {
+          if (image.naturalWidth >= 800 && index <= 20) {
             // Check image sizer
             imagesArray.push(image.src);
           }
@@ -1006,13 +1056,22 @@ class Scrapper {
   ) => {
     const apiKey = process.env.OPEN_AI_API_KEY;
     try {
+      const { sanitizedData, uploadedImageLocations } =
+        await this.puppeteerLoadFetch(
+          link,
+          false,
+          scrapeImages,
+          this.generateSlug(this.businessData.businessName),
+          true,
+          ""
+        );
       const cleanedContent = await this.regularFetch(link, scrapeImages);
       const messages = [
         {
           role: "system",
           content: prompts.adminPrompt,
         },
-        { role: "user", content: prompts.fullScrapperPrompt + cleanedContent },
+        { role: "user", content: prompts.fullScrapperPrompt + sanitizedData },
       ];
       if (previousData) {
         messages.push({
@@ -1048,7 +1107,8 @@ class Scrapper {
       }
       const parsedResponse = responseInJson["choices"][0]["message"]["content"];
       // Since our responses are also replied as JSON strings
-      return JSON.parse(parsedResponse);
+      const parsedJSONResponse = JSON.parse(parsedResponse);
+      return { parsedJSONResponse, uploadedImageLocations };
     } catch (er) {
       console.error(er.message + er.stack);
       await this.logError(`${er.message}`);
@@ -1066,7 +1126,7 @@ class Scrapper {
       const response = await this.openAiWithPrompts([
         {
           role: "user",
-          content: `Get the address and phone number of ${businessName} if listed in the following HTML code of the google page. In some instances, you might also be able to pick up the latitude and longitude of the business (in case a link to Google Maps is present). In those cases, please also return the "latitude" and "longitude" in the JSON. Longitude and latitude are optional, and should only be returned if actually found in the code. If not found, just return a JSON with data: {}, else, return data:{phone: PHONENUMBER, address: ADDRESS, longitude: LONGITUDE, latitude: LATITUDE}. The PHONENUMBER and ADDRESS should always be a string. If you find multiple phone numbers, just concatenate them with a ','. If there are multiple addresses, just select the first one.
+          content: `Get the address and phone number of ${businessName} if listed in the following HTML code of the google page. In some instances, you might also be able to pick up the latitude and longitude of the business (in case a link to Google Maps is present). In those cases, please also return the "latitude" and "longitude" in the JSON. Longitude and latitude are optional, and should only be returned if actually found in the code. if they are undefined or not found at all, simply do not return them in the JSON. If none of the data is  found, just return a JSON with data: {}, else, return data:{phone: PHONENUMBER, address: ADDRESS, longitude: LONGITUDE, latitude: LATITUDE}. The PHONENUMBER and ADDRESS should always be a string. If you find multiple phone numbers, just concatenate them with a ','. If there are multiple addresses, just select the first one.
             Here is the html code: ${pageGoogleHTML}
           `,
         },
@@ -1090,7 +1150,7 @@ class Scrapper {
       }
     } catch (error) {
       console.error("Error scraping business details from Google:", error);
-      businessData.errors.push("Main Site not working");
+      businessData.errors.push("Error scraping business details from Google");
       await this.logError(
         `Error scraping business details from Google: ${error}`
       );
@@ -1106,7 +1166,13 @@ class Scrapper {
 
     // 1. Scrape Business Data using Two Way communication:
     try {
-      businessData.data = await this.twoWayComm(businessURL, prompts);
+      const { mainSiteData, imagesFromMain } = await this.twoWayComm(
+        businessURL,
+        prompts
+      );
+
+      businessData.data = mainSiteData;
+      businessData.data.imagesFromMain = imagesFromMain;
     } catch (e) {
       businessData.errors.push("Main Site not working");
       console.log("Main Site not working".red);
@@ -1152,8 +1218,8 @@ class Scrapper {
 
     const linksArr = Object.keys(links);
 
-    for (var i = 0; i < linksArr.length; i++) {
-      // for (var i = 0; i < 1; i++) {
+    // for (var i = 0; i < linksArr.length; i++) {
+    for (var i = 0; i < 1; i++) {
       const platformName = linksArr[i];
       const platformURL = links[linksArr[i]].platformURL;
       try {
@@ -1276,9 +1342,11 @@ class Scrapper {
 
   listingHasEnoughData = (businessData) => {
     const enoughData =
-      businessData.summary ||
-      (businessData.data.platformSummaries &&
-        Object.keys(businessData.data.platformSummaries).length);
+      businessData.data &&
+      (businessData.data.apiData ||
+        businessData.data.summary ||
+        (businessData.data.platformSummaries &&
+          Object.keys(businessData.data.platformSummaries).length));
     this.enoughData = enoughData;
     return enoughData;
   };

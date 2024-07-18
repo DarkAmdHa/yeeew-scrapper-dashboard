@@ -35,20 +35,25 @@ export default function DashboardHome() {
   const [totalCount, setTotalCount] = useState(0);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [sortBy, setSortBy] = useState("");
+  const [regionFilters, setRegionFilters] = useState([]);
 
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
 
   useEffect(() => {
-    const page = searchParams.get("page");
-    const sortBy = searchParams.get("sortBy");
-    if (page) {
-      setCurrentPage(+page);
+    const pageParam = searchParams.get("page");
+    const sortByParam = searchParams.get("sortBy");
+    const regionFilterParam = searchParams.get("regionFilter");
+    if (pageParam) {
+      setCurrentPage(+pageParam);
     } else {
       setCurrentPage(1);
     }
-    if (sortBy) {
-      setSortBy(sortBy);
+    if (sortByParam) {
+      setSortBy(sortByParam);
+    }
+    if (regionFilterParam) {
+      setRegionFilters(regionFilterParam.split(","));
     }
   }, [searchParams]);
 
@@ -175,12 +180,18 @@ export default function DashboardHome() {
 
   useEffect(() => {
     if (token && currentPage) fetchListings();
-  }, [currentPage, token, sortBy]);
+  }, [currentPage, token, sortBy, regionFilters]);
 
   const fetchListings = async () => {
     setLoading(true);
     try {
-      const data = await getListings(currentPage, 10, sortBy, token);
+      const data = await getListings(
+        currentPage,
+        10,
+        sortBy,
+        regionFilters,
+        token
+      );
       setListings(data.listings);
       setTotalPages(data.totalPages);
       setTotalCount(data.totalCount);
@@ -218,6 +229,20 @@ export default function DashboardHome() {
     }));
   };
 
+  const handleRegionFilter = (value) => {
+    let newRegionFilters;
+    if (!regionFilters.includes(value)) {
+      newRegionFilters = [...regionFilters, value];
+    } else {
+      newRegionFilters = regionFilters.filter((item) => item != value);
+    }
+    setRegionFilters(newRegionFilters);
+
+    setSearchParams((prev) => ({
+      ...prev,
+      regionFilter: newRegionFilters.join(","),
+    }));
+  };
   const runScrapper = () => {
     console.log("Running");
     setConfirm3(true);
@@ -249,6 +274,245 @@ export default function DashboardHome() {
     {
       name: "Not Scraped",
       value: "notScraped",
+    },
+  ];
+
+  const regionOptions = [
+    {
+      name: "Bali",
+      value: "/bali",
+    },
+    {
+      name: "Indonesia",
+      value: "/indonesia",
+    },
+    {
+      name: "Asia",
+      value: "/asia",
+    },
+    {
+      name: "Central Africa",
+      value: "/central-africa",
+    },
+    {
+      name: "Ghana",
+      value: "/ghana",
+    },
+    {
+      name: "Ivory Coast",
+      value: "/ivory-coast",
+    },
+    {
+      name: "Morocco",
+      value: "/morocco",
+    },
+    {
+      name: "Madagascar",
+      value: "/madagascar",
+    },
+    {
+      name: "Mozambique",
+      value: "/mozambique",
+    },
+    {
+      name: "Namibia",
+      value: "/namibia",
+    },
+    {
+      name: "South Africa",
+      value: "/south-africa",
+    },
+    {
+      name: "West Africa",
+      value: "/west-africa",
+    },
+    {
+      name: "China",
+      value: "/china",
+    },
+    {
+      name: "Japan",
+      value: "/japan",
+    },
+    {
+      name: "Korea",
+      value: "/korea",
+    },
+    {
+      name: "Philippines",
+      value: "/philippines",
+    },
+    {
+      name: "Malaysia",
+      value: "/malaysia",
+    },
+    {
+      name: "Thailand",
+      value: "/thailand",
+    },
+    {
+      name: "Vietnam",
+      value: "/vietnam",
+    },
+    {
+      name: "Taiwan",
+      value: "/taiwan",
+    },
+    {
+      name: "Australia",
+      value: "/australia",
+    },
+    {
+      name: "Caribbean",
+      value: "/caribbean",
+    },
+    {
+      name: "Bermuda",
+      value: "/bermuda",
+    },
+    {
+      name: "Bahamas",
+      value: "/bahamas",
+    },
+    {
+      name: "Cuba",
+      value: "/cuba",
+    },
+    {
+      name: "Dominican Republic",
+      value: "/dominican-republic",
+    },
+    {
+      name: "Haiti",
+      value: "/haiti",
+    },
+    {
+      name: "Jamaica",
+      value: "/jamaica",
+    },
+    {
+      name: "US Virgin Islands",
+      value: "/us-virgin-islands",
+    },
+    {
+      name: "Venezuela",
+      value: "/venezuela",
+    },
+    {
+      name: "Trinidad and Tobago",
+      value: "/trinidad-tobago",
+    },
+    {
+      name: "Barbados",
+      value: "/barbados",
+    },
+    {
+      name: "Martinique",
+      value: "/martinique",
+    },
+    {
+      name: "Central America",
+      value: "/central-america",
+    },
+    {
+      name: "El Salvador",
+      value: "/el-salvador",
+    },
+    {
+      name: "Guatemala",
+      value: "/guatemala",
+    },
+    {
+      name: "Costa Rica",
+      value: "/costa-rica",
+    },
+    {
+      name: "Nicaragua",
+      value: "/nicaragua",
+    },
+    {
+      name: "Panama",
+      value: "/panama",
+    },
+    {
+      name: "Baja California",
+      value: "/baja-california",
+    },
+    {
+      name: "Colima and Michoacan",
+      value: "/colima-michoacan",
+    },
+    {
+      name: "Oaxaca",
+      value: "/oaxaca",
+    },
+    {
+      name: "Sinaloa",
+      value: "/sinaloa",
+    },
+    {
+      name: "Europe",
+      value: "/europe",
+    },
+    {
+      name: "Algarve",
+      value: "/algarve",
+    },
+    {
+      name: "Azores",
+      value: "/azores",
+    },
+    {
+      name: "Baltic Sea",
+      value: "/baltic-sea",
+    },
+    {
+      name: "Canary Islands",
+      value: "/canary-islands",
+    },
+    {
+      name: "France",
+      value: "/france",
+    },
+    {
+      name: "Germany",
+      value: "/germany",
+    },
+    {
+      name: "Greece",
+      value: "/greece",
+    },
+    {
+      name: "Iceland",
+      value: "/iceland",
+    },
+    {
+      name: "Italy",
+      value: "/italy",
+    },
+    {
+      name: "Madeira",
+      value: "/madeira",
+    },
+    {
+      name: "Netherlands",
+      value: "/netherlands",
+    },
+    {
+      name: "Norway",
+      value: "/norway",
+    },
+    {
+      name: "Portugal",
+      value: "/portugal",
+    },
+    {
+      name: "Russia",
+      value: "/russia",
+    },
+    {
+      name: "Chile",
+      value: "/chile",
     },
   ];
 
@@ -325,49 +589,93 @@ export default function DashboardHome() {
           )}
         </div>
 
-        {/* Sort dropdown */}
-        <Menu as="div" className="relative">
-          <Menu.Button className="flex items-center gap-x-1 text-sm font-medium leading-6 text-white">
-            {sortBy != ""
-              ? sortOptions.find((item) => item.value == sortBy).name
-              : "Sort By"}
-            <ChevronUpDownIcon
-              className="h-5 w-5 text-gray-500"
-              aria-hidden="true"
-            />
-          </Menu.Button>
-          <Transition
-            as={Fragment}
-            enter="transition ease-out duration-100"
-            enterFrom="transform opacity-0 scale-95"
-            enterTo="transform opacity-100 scale-100"
-            leave="transition ease-in duration-75"
-            leaveFrom="transform opacity-100 scale-100"
-            leaveTo="transform opacity-0 scale-95"
-          >
-            <Menu.Items className="absolute right-0 z-10 mt-2.5 w-40 origin-top-right rounded-md bg-white py-2 shadow-lg ring-1 ring-gray-900/5 focus:outline-none">
-              {sortOptions.map((option) => (
-                <Menu.Item key={option.name}>
-                  <div
-                    onClick={() => handleSortBy(option.value)}
-                    className={classNames(
-                      sortBy == option.value ? "bg-gray-100" : "",
-                      " px-3 py-1 pl-8 text-sm leading-6 text-gray-900 cursor-pointer transition hover:bg-gray-100 flex gap-2 relative"
-                    )}
-                  >
-                    {sortBy == option.value && (
-                      <CheckIcon
-                        width={15}
-                        className="absolute left-2 top-1/2 -translate-y-1/2"
-                      />
-                    )}
-                    {option.name}
-                  </div>
-                </Menu.Item>
-              ))}
-            </Menu.Items>
-          </Transition>
-        </Menu>
+        <div className="flex gap-4">
+          {/* Sort dropdown */}
+          <Menu as="div" className="relative">
+            <Menu.Button className="flex items-center gap-x-1 text-sm font-medium leading-6 text-white">
+              {sortBy != ""
+                ? sortOptions.find((item) => item.value == sortBy).name
+                : "Sort By"}
+              <ChevronUpDownIcon
+                className="h-5 w-5 text-gray-500"
+                aria-hidden="true"
+              />
+            </Menu.Button>
+            <Transition
+              as={Fragment}
+              enter="transition ease-out duration-100"
+              enterFrom="transform opacity-0 scale-95"
+              enterTo="transform opacity-100 scale-100"
+              leave="transition ease-in duration-75"
+              leaveFrom="transform opacity-100 scale-100"
+              leaveTo="transform opacity-0 scale-95"
+            >
+              <Menu.Items className="absolute right-0 z-10 mt-2.5 w-40 origin-top-right rounded-md bg-white py-2 shadow-lg ring-1 ring-gray-900/5 focus:outline-none">
+                {sortOptions.map((option) => (
+                  <Menu.Item key={option.name}>
+                    <div
+                      onClick={() => handleSortBy(option.value)}
+                      className={classNames(
+                        sortBy == option.value ? "bg-gray-100" : "",
+                        " px-3 py-1 pl-8 text-sm leading-6 text-gray-900 cursor-pointer transition hover:bg-gray-100 flex gap-2 relative"
+                      )}
+                    >
+                      {sortBy == option.value && (
+                        <CheckIcon
+                          width={15}
+                          className="absolute left-2 top-1/2 -translate-y-1/2"
+                        />
+                      )}
+                      {option.name}
+                    </div>
+                  </Menu.Item>
+                ))}
+              </Menu.Items>
+            </Transition>
+          </Menu>
+
+          {/* Region Filter Dropdown */}
+          <Menu as="div" className="relative">
+            <Menu.Button className="flex items-center gap-x-1 text-sm font-medium leading-6 text-white">
+              Filter By Region
+              <ChevronUpDownIcon
+                className="h-5 w-5 text-gray-500"
+                aria-hidden="true"
+              />
+            </Menu.Button>
+            <Transition
+              as={Fragment}
+              enter="transition ease-out duration-100"
+              enterFrom="transform opacity-0 scale-95"
+              enterTo="transform opacity-100 scale-100"
+              leave="transition ease-in duration-75"
+              leaveFrom="transform opacity-100 scale-100"
+              leaveTo="transform opacity-0 scale-95"
+            >
+              <Menu.Items className="absolute right-0 z-10 mt-2.5 w-40 origin-top-right rounded-md bg-white py-2 shadow-lg ring-1 ring-gray-900/5 focus:outline-none max-h-56 overflow-auto">
+                {regionOptions.map((option) => (
+                  <Menu.Item key={option.name}>
+                    <div
+                      onClick={() => handleRegionFilter(option.value)}
+                      className={classNames(
+                        sortBy == option.value ? "bg-gray-100" : "",
+                        " px-3 py-1 pl-8 text-sm leading-6 text-gray-900 cursor-pointer transition hover:bg-gray-100 flex gap-2 relative"
+                      )}
+                    >
+                      {regionFilters.includes(option.value) && (
+                        <CheckIcon
+                          width={15}
+                          className="absolute left-2 top-1/2 -translate-y-1/2"
+                        />
+                      )}
+                      {option.name}
+                    </div>
+                  </Menu.Item>
+                ))}
+              </Menu.Items>
+            </Transition>
+          </Menu>
+        </div>
       </header>
       {loading ? (
         <div className="flex justify-center items-center h-48">

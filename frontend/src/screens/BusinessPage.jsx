@@ -535,6 +535,57 @@ export default function BusinessPage() {
         </form>
       </div>
 
+      <div className="grid grid-cols-1 gap-x-8 gap-y-8 pt-10 md:grid-cols-3">
+        <div className="px-4 sm:px-0">
+          <h2 className="text-base font-semibold leading-7 text-white">
+            APIs Information
+          </h2>
+          <p className="mt-1 text-sm leading-6 text-gray-400">
+            This will be filled once scrapped
+          </p>
+        </div>
+
+        <div className="bg-gray-800 shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl md:col-span-2">
+          <div className="px-4 py-6 sm:p-8">
+            <div className="grid  grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
+              <div className="sm:col-span-3">
+                <div className="block text-sm font-medium leading-6 text-white">
+                  Booking API
+                </div>
+              </div>
+
+              <div className="sm:col-span-6">
+                <label
+                  htmlFor="email"
+                  className="block text-sm font-medium leading-6 text-white"
+                >
+                  Platform ID
+                </label>
+                <div className="mt-2 text-white">
+                  {changeableListing.apiData &&
+                    changeableListing.apiData.booking &&
+                    changeableListing.apiData.booking.id}
+                </div>
+              </div>
+              <div className="sm:col-span-6">
+                <label
+                  htmlFor="email"
+                  className="block text-sm font-medium leading-6 text-white"
+                >
+                  Platform Data
+                </label>
+                <p className="mt-2 text-white overflow-hidden whitespace-break-spaces">
+                  {changeableListing.apiData &&
+                    changeableListing.apiData.booking &&
+                    changeableListing.apiData.booking.data}
+                </p>
+              </div>
+            </div>
+          </div>
+          <div className="flex items-center justify-end gap-x-6 border-t border-gray-500/10 px-4 py-4 sm:px-8"></div>
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 gap-x-8 gap-y-8 md:grid-cols-3">
         <div className="px-4 sm:px-0">
           <h2 className="text-base font-semibold leading-7 text-white">

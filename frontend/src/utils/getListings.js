@@ -4,10 +4,11 @@ export const getListings = async (
   page = 1,
   limit = 5,
   sort = "-createdAt",
+  regionFilters,
   token
 ) => {
   const response = await axios.get(
-    `/api/listing?page=${page}&limit=${limit}&sort=${sort}`,
+    `/api/listing?page=${page}&limit=${limit}&sort=${sort}&regionFilters=${regionFilters}`,
     {
       headers: {
         Authorization: `Bearer ${token}`,

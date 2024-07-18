@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 .loader {
-  border-bottom-color: #00c3d8;
+  border-bottom-color: #50145c;
   border-radius: 50%;
   display: inline-block;
   box-sizing: border-box;
