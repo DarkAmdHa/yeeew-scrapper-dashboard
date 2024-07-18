@@ -155,7 +155,7 @@ class Scrapper {
 
     console.log(JSON.stringify(this.scrapedData));
 
-    if (data.apiData) {
+    if (data.apiData && data.apiData.booking && data.apiData.booking.id) {
       listing.apiData = data.apiData;
     }
 
@@ -542,7 +542,6 @@ class Scrapper {
     platformName = ""
   ) => {
     const browser = await pt.launch({ headless: true });
-    
 
     const page = await browser.newPage();
 
