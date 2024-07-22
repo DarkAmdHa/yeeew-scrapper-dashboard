@@ -2,24 +2,29 @@ import axios from "axios";
 class BookingAPIFetcher {
   constructor(businessName) {
     this.businessName = businessName;
-    this.dest_id = "";
-    this.hotelOverview = null;
+    this.entityId = "";
+    this.coordinates = {
+      lat: "",
+      long: "",
+    };
+
     this.description = null;
-    this.paymentFeatures = null;
-    this.popularLandmarks = null;
+    this.policies = null;
+    this.landmarks = null;
   }
 
   async init() {
     await this.getBusinessId(this.businessName);
-    return {
-      id: this.dest_id,
-      data: JSON.stringify({
-        hotelOverview: this.hotelOverview,
-        description: this.description,
-        paymentFeatures: this.paymentFeatures,
-        popularLandmarks: this.popularLandmarks,
-      }),
-    };
+    if (this.entityId)
+      return {
+        id: this.entityId,
+        data: {
+          description: this.description,
+          policies: this.policies,
+          landmarks: this.landmarks,
+          coordinates: this.coordinates,
+        },
+      };
   }
 
   async getBusinessId(businessName) {
@@ -28,18 +33,20 @@ class BookingAPIFetcher {
       url: "https://booking-com15.p.rapidapi.com/api/v1/hotels/searchDestination",
       params: { query: businessName },
       headers: {
-        "x-rapidapi-key": process.env.RAPID_API_BOOKING_COM_15_KEY,
+        "x-rapidapi-key": "2573a59d87mshf5f308cc83e4bafp12b673jsnffc706feb184",
         "x-rapidapi-host": "booking-com15.p.rapidapi.com",
       },
     };
 
     try {
       const { data } = await axios.request(options);
-      console.log(data);
       if (data.data.length) {
-        this.hotelOverview = data.data[0];
-        this.dest_id = data.data[0].dest_id;
-        await this.fetchResortDetails();
+        this.coordinates = {
+          lat: `${data.data[0].latitude}`,
+          long: `${data.data[0].longitude}`,
+        };
+        this.entityId = data.data[0].dest_id;
+        if (this.entityId) await this.fetchResortDetails();
       }
     } catch (error) {
       console.error(error);
@@ -50,36 +57,41 @@ class BookingAPIFetcher {
     const options = {
       method: "GET",
       url: "https://booking-com15.p.rapidapi.com/api/v1/hotels/getDescriptionAndInfo",
-      params: { hotel_id: this.dest_id, languagecode: "en-us" },
+      params: { hotel_id: this.entityId, languagecode: "en-us" },
       headers: {
-        "x-rapidapi-key": process.env.RAPID_API_BOOKING_COM_15_KEY,
+        "x-rapidapi-key": "2573a59d87mshf5f308cc83e4bafp12b673jsnffc706feb184",
         "x-rapidapi-host": "booking-com15.p.rapidapi.com",
       },
     };
     try {
       const { data } = await axios.request(options);
-      console.log(data);
 
-      this.description = data;
+      if (data.data.length) {
+        this.description = data.data.map((item) => item.description);
+      }
     } catch (error) {
       console.error(error);
     }
   }
 
-  async fetchResortPaymentFeatures() {
+  async fetchResortPolicies() {
     const options = {
       method: "GET",
-      url: "https://booking-com15.p.rapidapi.com/api/v1/hotels/getPaymentFeatures",
-      params: { hotel_id: this.dest_id, languagecode: "en-us" },
+      url: "https://booking-com15.p.rapidapi.com/api/v1/hotels/getHotelPolicies",
+      params: { hotel_id: this.entityId, languagecode: "en-us" },
       headers: {
-        "x-rapidapi-key": process.env.RAPID_API_BOOKING_COM_15_KEY,
+        "x-rapidapi-key": "2573a59d87mshf5f308cc83e4bafp12b673jsnffc706feb184",
         "x-rapidapi-host": "booking-com15.p.rapidapi.com",
       },
     };
     try {
       const { data } = await axios.request(options);
-      console.log(data);
-      this.paymentFeatures = data;
+
+      if (data.data.policy && data.data.policy.length) {
+        this.policies = data.data.policy
+          .flatMap((pol) => pol.content && pol.content.map((item) => item.text))
+          .filter(Boolean);
+      }
     } catch (error) {
       console.error(error);
     }
@@ -89,16 +101,32 @@ class BookingAPIFetcher {
     const options = {
       method: "GET",
       url: "https://booking-com15.p.rapidapi.com/api/v1/hotels/getPopularAttractionNearBy",
-      params: { hotel_id: this.dest_id, languagecode: "en-us" },
+      params: { hotel_id: this.entityId, languagecode: "en-us" },
       headers: {
-        "x-rapidapi-key": process.env.RAPID_API_BOOKING_COM_15_KEY,
+        "x-rapidapi-key": "2573a59d87mshf5f308cc83e4bafp12b673jsnffc706feb184",
         "x-rapidapi-host": "booking-com15.p.rapidapi.com",
       },
     };
     try {
       const { data } = await axios.request(options);
-      console.log(data);
-      this.popularLandmarks = data;
+      this.landmarks = data.data && {
+        closestLandmarks: data.data.closest_landmarks.map((landmark) => ({
+          lat: landmark.latitude,
+          long: landmark.longitude,
+          name: landmark.tag,
+          distance: landmark.distance,
+          votes: landmark.total_votes,
+          review: landmark.average_out_of_10,
+        })),
+        popularLandmarks: data.data.popular_landmarks.map((landmark) => ({
+          lat: landmark.latitude,
+          long: landmark.longitude,
+          name: landmark.tag,
+          distance: landmark.distance,
+          votes: landmark.total_votes,
+          review: landmark.average_out_of_10,
+        })),
+      };
     } catch (error) {
       console.error(error);
     }
@@ -106,7 +134,7 @@ class BookingAPIFetcher {
 
   async fetchResortDetails() {
     await this.fetchResortDescription();
-    await this.fetchResortPaymentFeatures();
+    await this.fetchResortPolicies();
     await this.fetchResortPopularLandmarks();
   }
 }

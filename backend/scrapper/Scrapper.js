@@ -10,6 +10,8 @@ import Listing from "../models/listingModel.js";
 import Operation from "../models/operationModel.js";
 import Prompt from "../models/promptModel.js";
 import BookingAPIFetcher from "./BookingAPIFetcher.js";
+import PricelineAPIFetcher from "./PricelineAPIFetcher.js";
+import HotelsAPIFetcher from "./HotelsAPIFetcher.js";
 
 class Scrapper {
   constructor(businessData, operationId) {
@@ -52,15 +54,17 @@ class Scrapper {
       this.businessData.businessName,
       this.businessData.businessURL
     );
-    this.scrapedData = await this.scrapeDataFromGoogle(
-      this.businessData.businessName,
-      this.scrapedData
-    );
-    this.scrapedData = await this.scrapePlatforms(
-      this.businessData,
-      this.scrapedData
-    );
+    // this.scrapedData = await this.scrapeDataFromGoogle(
+    //   this.businessData.businessName,
+    //   this.scrapedData
+    // );
+    // this.scrapedData = await this.scrapePlatforms(
+    //   this.businessData,
+    //   this.scrapedData
+    // );
     this.scrapedData = await this.scrapeFromBookingAPI();
+    this.scrapedData = await this.scrapeFromPricelineAPI();
+    this.scrapedData = await this.scrapeFromHotelsAPI();
     if (this.listingHasEnoughData(this.scrapedData)) {
       //Only proceed if enough data was gathered
       this.scrapedData = await this.generateFinalContent(
@@ -108,6 +112,7 @@ class Scrapper {
         this.businessData.businessName
       );
       const apiResponse = await resortFetcher.init();
+      console.log(apiResponse);
 
       if (this.scrapedData.data.apiData) {
         this.scrapedData.data.apiData.booking = apiResponse;
@@ -116,8 +121,53 @@ class Scrapper {
           booking: apiResponse,
         };
       }
-    } catch {
-      console.log("Error encountered while fetching from API".red);
+    } catch (error) {
+      console.log("Error encountered while fetching from API:", error);
+      this.logError("Error encountered while fetching from API");
+    }
+
+    return this.scrapedData;
+  }
+  async scrapeFromPricelineAPI() {
+    try {
+      // Usage example:
+      const resortFetcher = new PricelineAPIFetcher(
+        this.businessData.businessName
+      );
+      const apiResponse = await resortFetcher.init();
+
+      if (this.scrapedData.data.apiData) {
+        this.scrapedData.data.apiData.priceline = apiResponse;
+      } else {
+        this.scrapedData.data.apiData = {
+          priceline: apiResponse,
+        };
+      }
+    } catch (error) {
+      console.log("Error encountered while fetching from API:", error);
+      this.logError("Error encountered while fetching from API");
+    }
+
+    return this.scrapedData;
+  }
+
+  async scrapeFromHotelsAPI() {
+    try {
+      // Usage example:
+      const resortFetcher = new HotelsAPIFetcher(
+        this.businessData.businessName
+      );
+      const apiResponse = await resortFetcher.init();
+
+      if (this.scrapedData.data.apiData) {
+        this.scrapedData.data.apiData.hotels = apiResponse;
+      } else {
+        this.scrapedData.data.apiData = {
+          hotels: apiResponse,
+        };
+      }
+    } catch (error) {
+      console.log("Error encountered while fetching from API:", error);
       this.logError("Error encountered while fetching from API");
     }
 
@@ -153,11 +203,17 @@ class Scrapper {
       listing.tripType = data.trip_type.split(",");
     }
 
-    console.log(JSON.stringify(this.scrapedData));
-
-    if (data.apiData && data.apiData.booking && data.apiData.booking.id) {
-      listing.apiData = data.apiData;
+    listing.apiData = {};
+    if (data.apiData && data.apiData.booking) {
+      listing.apiData.booking = data.apiData.booking;
     }
+    if (data.apiData && data.apiData.priceline) {
+      listing.apiData.priceline = data.apiData.priceline;
+    }
+    if (data.apiData && data.apiData.hotels) {
+      listing.apiData.hotels = data.apiData.hotels;
+    }
+    console.log(JSON.stringify(this.scrapedData));
 
     if (data.platformSummaries && data.platformSummaries["bookingData"]) {
       const bookingData = data.platformSummaries.bookingData;
@@ -1059,7 +1115,8 @@ class Scrapper {
         await this.puppeteerLoadFetch(
           link,
           false,
-          scrapeImages,
+          // scrapeImages,
+          false,
           this.generateSlug(this.businessData.businessName),
           true,
           ""
@@ -1233,7 +1290,8 @@ class Scrapper {
           const result = await this.puppeteerLoadFetch(
             listingUrlData.data,
             true,
-            businessData.data.scrapeImages,
+            // businessData.data.scrapeImages,
+            false,
             this.generateSlug(businessName),
             true,
             platformName

@@ -1,5 +1,9 @@
 import mongoose from "mongoose";
 
+import bookingAPIDataSchema from "./bookingAPISchema.js";
+import pricelineSchema from "./pricelineAPISchema.js";
+import hotelSchema from "./hotelsAPISchema.js";
+
 const roomSchema = mongoose.Schema({
   roomName: {
     type: String,
@@ -81,15 +85,9 @@ const ListingSchema = mongoose.Schema(
     propertyAmenitiesFromBooking: [amenitiesSchema],
     propertySurroundingsFromBooking: [propertySurroundingsSchema],
     apiData: {
-      booking: {
-        id: {
-          type: String,
-          required: true,
-        },
-        data: {
-          type: String,
-        },
-      },
+      booking: bookingAPIDataSchema,
+      priceline: pricelineSchema,
+      hotels: hotelSchema,
     },
     location: {
       type: String,
