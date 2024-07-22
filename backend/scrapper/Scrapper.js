@@ -54,14 +54,14 @@ class Scrapper {
       this.businessData.businessName,
       this.businessData.businessURL
     );
-    // this.scrapedData = await this.scrapeDataFromGoogle(
-    //   this.businessData.businessName,
-    //   this.scrapedData
-    // );
-    // this.scrapedData = await this.scrapePlatforms(
-    //   this.businessData,
-    //   this.scrapedData
-    // );
+    this.scrapedData = await this.scrapeDataFromGoogle(
+      this.businessData.businessName,
+      this.scrapedData
+    );
+    this.scrapedData = await this.scrapePlatforms(
+      this.businessData,
+      this.scrapedData
+    );
     this.scrapedData = await this.scrapeFromBookingAPI();
     this.scrapedData = await this.scrapeFromPricelineAPI();
     this.scrapedData = await this.scrapeFromHotelsAPI();
@@ -1115,8 +1115,7 @@ class Scrapper {
         await this.puppeteerLoadFetch(
           link,
           false,
-          // scrapeImages,
-          false,
+          scrapeImages,
           this.generateSlug(this.businessData.businessName),
           true,
           ""
@@ -1290,8 +1289,7 @@ class Scrapper {
           const result = await this.puppeteerLoadFetch(
             listingUrlData.data,
             true,
-            // businessData.data.scrapeImages,
-            false,
+            businessData.data.scrapeImages,
             this.generateSlug(businessName),
             true,
             platformName
