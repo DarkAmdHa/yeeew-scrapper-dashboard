@@ -340,6 +340,7 @@ class Scrapper {
         }
       });
 
+      console.log(scrapedImagesArray);
       listing.scrapedImages = scrapedImagesArray;
       return listing;
     }

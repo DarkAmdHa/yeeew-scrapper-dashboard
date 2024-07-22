@@ -579,66 +579,71 @@ export default function BusinessPage() {
                       <p className="mt-2 text-white overflow-hidden whitespace-break-spaces">
                         Description:
                         <ul>
-                          {changeableListing.apiData.booking.data.description.map(
-                            (des, index) => (
-                              <li key={index}>{des}</li>
-                            )
-                          )}
+                          {changeableListing.apiData.booking.data.description &&
+                            changeableListing.apiData.booking.data.description.map(
+                              (des, index) => <li key={index}>{des}</li>
+                            )}
                         </ul>
                       </p>
                       <p className="mt-2 text-white overflow-hidden whitespace-break-spaces">
                         Policies:
                         <ul>
-                          {changeableListing.apiData.booking.data.policies.map(
-                            (pol, index) => (
-                              <li key={index}>{pol}</li>
-                            )
-                          )}
+                          {changeableListing.apiData.booking.data.policies &&
+                            changeableListing.apiData.booking.data.policies.map(
+                              (pol, index) => <li key={index}>{pol}</li>
+                            )}
                         </ul>
                       </p>
                       <p className="mt-2 text-white overflow-hidden whitespace-break-spaces">
                         Closest Landmarks:
                         <ul>
-                          {changeableListing.apiData.booking.data.landmarks.closestLandmarks.map(
-                            (land, index) => (
-                              <li key={index}>
-                                Latitude: {land.lat} <br />
-                                Longitude: {land.long} <br />
-                                Name: {land.name} <br />
-                                Distance: {land.distance} <br />
-                                Votes: {land.votes} <br />
-                                Review: {land.review} <br />
-                              </li>
-                            )
-                          )}
+                          {changeableListing.apiData.booking.data.landmarks &&
+                            changeableListing.apiData.booking.data.landmarks
+                              .closestLandmarks &&
+                            changeableListing.apiData.booking.data.landmarks.closestLandmarks.map(
+                              (land, index) => (
+                                <li key={index}>
+                                  Latitude: {land.lat} <br />
+                                  Longitude: {land.long} <br />
+                                  Name: {land.name} <br />
+                                  Distance: {land.distance} <br />
+                                  Votes: {land.votes} <br />
+                                  Review: {land.review} <br />
+                                </li>
+                              )
+                            )}
                         </ul>
                       </p>
                       <p className="mt-2 text-white overflow-hidden whitespace-break-spaces">
                         Popular Landmarks:
                         <ul>
-                          {changeableListing.apiData.booking.data.landmarks.closestLandmarks.map(
-                            (land, index) => (
-                              <li key={index}>
-                                Latitude: {land.lat} <br />
-                                Longitude: {land.long} <br />
-                                Name: {land.name} <br />
-                                Distance: {land.distance} <br />
-                                Votes: {land.votes} <br />
-                                Review: {land.review} <br />
-                              </li>
-                            )
-                          )}
+                          {changeableListing.apiData.booking.data.landmarks &&
+                            changeableListing.apiData.booking.data.landmarks
+                              .popularLandmarks &&
+                            changeableListing.apiData.booking.data.landmarks.popularLandmarks.map(
+                              (land, index) => (
+                                <li key={index}>
+                                  Latitude: {land.lat} <br />
+                                  Longitude: {land.long} <br />
+                                  Name: {land.name} <br />
+                                  Distance: {land.distance} <br />
+                                  Votes: {land.votes} <br />
+                                  Review: {land.review} <br />
+                                </li>
+                              )
+                            )}
                         </ul>
                       </p>
                       <p className="mt-2 text-white overflow-hidden whitespace-break-spaces">
                         Coordinates: Latitude:{" "}
-                        {changeableListing.apiData.booking.data.coordinates.lat}{" "}
+                        {changeableListing.apiData.booking.data.coordinates &&
+                          changeableListing.apiData.booking.data.coordinates
+                            .lat}{" "}
                         <br />
                         Longitude:{" "}
-                        {
+                        {changeableListing.apiData.booking.data.coordinates &&
                           changeableListing.apiData.booking.data.coordinates
-                            .long
-                        }{" "}
+                            .long}{" "}
                         <br />
                       </p>
                     </div>
@@ -679,14 +684,14 @@ export default function BusinessPage() {
                       <p className="mt-2 text-white overflow-hidden whitespace-break-spaces">
                         Coordinates: <br />
                         Latitude:{" "}
-                        {
-                          changeableListing.apiData.hotels.data.coordinates.lat
-                        }{" "}
+                        {changeableListing.apiData.hotels.data.coordinates &&
+                          changeableListing.apiData.hotels.data.coordinates
+                            .lat}{" "}
                         <br />
                         Longitude:{" "}
-                        {
-                          changeableListing.apiData.hotels.data.coordinates.long
-                        }{" "}
+                        {changeableListing.apiData.hotels.data.coordinates &&
+                          changeableListing.apiData.hotels.data.coordinates
+                            .long}{" "}
                         <br />
                       </p>
                     </div>
