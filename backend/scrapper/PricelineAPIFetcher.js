@@ -34,7 +34,7 @@ class PricelineAPIFetcher {
         search_type: "ALL",
       },
       headers: {
-        "x-rapidapi-key": process.env.RAPID_API_PRICELINE_KEY,
+        "x-rapidapi-key": process.env.RAPID_API_KEY,
         "x-rapidapi-host": "priceline-com-provider.p.rapidapi.com",
       },
     };
@@ -66,7 +66,7 @@ class PricelineAPIFetcher {
         hotel_id: +this.entityId,
       },
       headers: {
-        "x-rapidapi-key": process.env.RAPID_API_PRICELINE_KEY,
+        "x-rapidapi-key": process.env.RAPID_API_KEY,
         "x-rapidapi-host": "priceline-com-provider.p.rapidapi.com",
       },
     };

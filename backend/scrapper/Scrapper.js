@@ -12,6 +12,7 @@ import Prompt from "../models/promptModel.js";
 import BookingAPIFetcher from "./BookingAPIFetcher.js";
 import PricelineAPIFetcher from "./PricelineAPIFetcher.js";
 import HotelsAPIFetcher from "./HotelsAPIFetcher.js";
+import TripAdvisorFetcher from "./TripAdvisorFetcher.js";
 
 class Scrapper {
   constructor(businessData, operationId) {
@@ -58,13 +59,17 @@ class Scrapper {
       this.businessData.businessName,
       this.scrapedData
     );
-    this.scrapedData = await this.scrapePlatforms(
-      this.businessData,
-      this.scrapedData
-    );
-    this.scrapedData = await this.scrapeFromBookingAPI();
-    this.scrapedData = await this.scrapeFromPricelineAPI();
-    this.scrapedData = await this.scrapeFromHotelsAPI();
+    if (process.env.NODE_ENV != "development")
+      this.scrapedData = await this.scrapePlatforms(
+        this.businessData,
+        this.scrapedData
+      );
+    if (process.env.NODE_ENV != "development") {
+      this.scrapedData = await this.scrapeFromBookingAPI();
+      this.scrapedData = await this.scrapeFromPricelineAPI();
+      this.scrapedData = await this.scrapeFromHotelsAPI();
+    }
+    this.scrapedData = await this.scrapeFromTripAdvisor();
     if (this.listingHasEnoughData(this.scrapedData)) {
       //Only proceed if enough data was gathered
       this.scrapedData = await this.generateFinalContent(
@@ -107,7 +112,6 @@ class Scrapper {
 
   async scrapeFromBookingAPI() {
     try {
-      // Usage example:
       const resortFetcher = new BookingAPIFetcher(
         this.businessData.businessName
       );
@@ -130,7 +134,6 @@ class Scrapper {
   }
   async scrapeFromPricelineAPI() {
     try {
-      // Usage example:
       const resortFetcher = new PricelineAPIFetcher(
         this.businessData.businessName
       );
@@ -153,7 +156,6 @@ class Scrapper {
 
   async scrapeFromHotelsAPI() {
     try {
-      // Usage example:
       const resortFetcher = new HotelsAPIFetcher(
         this.businessData.businessName
       );
@@ -169,6 +171,30 @@ class Scrapper {
     } catch (error) {
       console.log("Error encountered while fetching from API:", error);
       this.logError("Error encountered while fetching from API");
+    }
+
+    return this.scrapedData;
+  }
+  async scrapeFromTripAdvisor() {
+    try {
+      const resortFetcher = new TripAdvisorFetcher(
+        this.businessData.businessName
+      );
+      const apiResponse = await resortFetcher.init();
+
+      if (this.scrapedData.data.apiData) {
+        this.scrapedData.data.apiData.tripadvisor = apiResponse;
+      } else {
+        this.scrapedData.data.apiData = {
+          tripadvisor: apiResponse,
+        };
+      }
+    } catch (error) {
+      console.log(
+        "Error encountered while fetching from TripAdvisor API:",
+        error
+      );
+      this.logError("Error encountered while fetching from TripAdvisor API");
     }
 
     return this.scrapedData;
@@ -204,15 +230,21 @@ class Scrapper {
     }
 
     listing.apiData = {};
-    if (data.apiData && data.apiData.booking) {
-      listing.apiData.booking = data.apiData.booking;
+    if (data.apiData) {
+      if (data.apiData.booking) {
+        listing.apiData.booking = data.apiData.booking;
+      }
+      if (data.apiData.priceline) {
+        listing.apiData.priceline = data.apiData.priceline;
+      }
+      if (data.apiData.hotels) {
+        listing.apiData.hotels = data.apiData.hotels;
+      }
+      if (data.apiData.tripadvisor) {
+        listing.apiData.tripadvisor = data.apiData.tripadvisor;
+      }
     }
-    if (data.apiData && data.apiData.priceline) {
-      listing.apiData.priceline = data.apiData.priceline;
-    }
-    if (data.apiData && data.apiData.hotels) {
-      listing.apiData.hotels = data.apiData.hotels;
-    }
+
     console.log(JSON.stringify(this.scrapedData));
 
     if (data.platformSummaries && data.platformSummaries["bookingData"]) {
@@ -232,7 +264,10 @@ class Scrapper {
       listing.faq = data.content.faq || [];
 
       if (data.content.highlights) {
-        listing.highlightsAndTopAmenities = data.content.highlights.split(";");
+        if (typeof data.content.highlights == "string")
+          listing.highlightsAndTopAmenities =
+            data.content.highlights.split(";");
+        else listing.highlightsAndTopAmenities = data.content.highlights;
       }
     }
 
@@ -340,7 +375,7 @@ class Scrapper {
         }
       });
 
-      console.log(scrapedImagesArray);
+      // console.log(scrapedImagesArray);
       listing.scrapedImages = scrapedImagesArray;
       return listing;
     }
@@ -605,6 +640,8 @@ class Scrapper {
     await page.setViewport({ width: 1000, height: 500 });
 
     await page.goto(link);
+
+    if (process.env.NODE_ENV === "development") scrapingImages = false;
 
     if (dynamic) {
       // Wait for 5 seconds before scraping:
@@ -1274,8 +1311,9 @@ class Scrapper {
 
     const linksArr = Object.keys(links);
 
-    // for (var i = 0; i < linksArr.length; i++) {
-    for (var i = 0; i < 1; i++) {
+    const loopLength =
+      process.env.NODE_ENV === "development" ? 1 : linksArr.length;
+    for (var i = 0; i < loopLength; i++) {
       const platformName = linksArr[i];
       const platformURL = links[linksArr[i]].platformURL;
       try {
@@ -1412,6 +1450,26 @@ class Scrapper {
     // res.json({ businessData: businessData2 });
     // return;
 
+    try {
+      const prompts = await this.getPrompts();
+
+      // 3. Build Business Slug for yeeew:
+      const slug = await this.slugBuilder(
+        originalData.businessName,
+        businessData.data.location,
+        prompts.slugBuilderPrompt
+      );
+      businessData.data.slug = slug;
+    } catch (error) {
+      console.error("Error building business slug:", error);
+      await this.logError(`Error building business slug: ${error}`);
+    }
+
+    console.log(JSON.stringify(businessData));
+    return businessData;
+  };
+
+  buildBusinessSlug2 = async (originalData, businessData) => {
     try {
       const prompts = await this.getPrompts();
 

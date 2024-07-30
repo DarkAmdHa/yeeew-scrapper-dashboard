@@ -1,4 +1,4 @@
-import { Fragment, useContext, useState } from "react";
+import { Fragment, useContext, useEffect, useState } from "react";
 import YeeewLogo from "../assets/yeew-logo.webp";
 import { Dialog, Transition } from "@headlessui/react";
 import {
@@ -13,7 +13,7 @@ import {
   MagnifyingGlassIcon,
   PaperAirplaneIcon,
 } from "@heroicons/react/20/solid";
-import { Link, Outlet, useLocation } from "react-router-dom";
+import { Link, Outlet, useLocation, useSearchParams } from "react-router-dom";
 import {
   DocumentChartBarIcon,
   ExclamationCircleIcon,
@@ -50,7 +50,14 @@ export default function DashboardLayout() {
   const { setUser, setToken, user } = useContext(AppContext);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
+  const [query, setQuery] = useState("");
+
   const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  useEffect(() => {
+    if (searchParams.get("query")) setQuery(searchParams.get("query"));
+  }, [searchParams]);
 
   const handleLogout = () => {
     if (window.confirm("Are you sure ?")) {
@@ -256,38 +263,51 @@ export default function DashboardLayout() {
           </div>
         </div>
         <div className="xl:pl-72">
-          {/* Sticky search header */}
-          <div className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-6 border-b border-white/5 bg-gray-900 px-4 shadow-sm sm:px-6 lg:px-8">
-            <button
-              type="button"
-              className="-m-2.5 p-2.5 text-white xl:hidden"
-              onClick={() => setSidebarOpen(true)}
-            >
-              <span className="sr-only">Open sidebar</span>
-              <Bars3Icon className="h-5 w-5" aria-hidden="true" />
-            </button>
+          {(location.pathname == "/dashboard/" ||
+            location.pathname == "/dashboard") && (
+            <div className="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-6 border-b border-white/5 bg-gray-900 px-4 shadow-sm sm:px-6 lg:px-8">
+              <button
+                type="button"
+                className="-m-2.5 p-2.5 text-white xl:hidden"
+                onClick={() => setSidebarOpen(true)}
+              >
+                <span className="sr-only">Open sidebar</span>
+                <Bars3Icon className="h-5 w-5" aria-hidden="true" />
+              </button>
 
-            <div className="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
-              <form className="flex flex-1" action="#" method="GET">
-                <label htmlFor="search-field" className="sr-only">
-                  Search
-                </label>
-                <div className="relative w-full">
-                  <MagnifyingGlassIcon
-                    className="pointer-events-none absolute inset-y-0 left-0 h-full w-5 text-gray-500"
-                    aria-hidden="true"
-                  />
-                  <input
-                    id="search-field"
-                    className="block h-full w-full border-0 bg-transparent py-0 pl-8 pr-0 text-white focus:ring-0 sm:text-sm"
-                    placeholder="Search..."
-                    type="search"
-                    name="search"
-                  />
-                </div>
-              </form>
+              <div className="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
+                <form className="flex flex-1" action="#" method="GET">
+                  <label htmlFor="search-field" className="sr-only">
+                    Search
+                  </label>
+                  <div className="relative w-full">
+                    <MagnifyingGlassIcon
+                      className="pointer-events-none absolute inset-y-0 left-0 h-full w-5 text-gray-500"
+                      aria-hidden="true"
+                    />
+                    <input
+                      id="search-field"
+                      className="block h-full w-full border-0 bg-transparent py-0 pl-8 pr-0 text-white focus:ring-0 sm:text-sm"
+                      placeholder="Search..."
+                      type="search"
+                      name="query"
+                      value={query}
+                      onChange={(e) => {
+                        setQuery(e.target.value);
+                        const newParams = new URLSearchParams(searchParams);
+                        newParams.delete("page");
+                        if (e.target.value)
+                          newParams.set("query", e.target.value);
+                        else newParams.delete("query");
+
+                        setSearchParams(newParams);
+                      }}
+                    />
+                  </div>
+                </form>
+              </div>
             </div>
-          </div>
+          )}
 
           <main className="w-full">
             <Outlet />

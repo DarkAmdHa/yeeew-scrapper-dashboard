@@ -127,6 +127,7 @@ class ListingController {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 5;
     const sort = req.query.sort || "-createdAt";
+    const query = req.query.query || "";
     let regionFilters = req.query.regionFilters || "";
     if (regionFilters) {
       regionFilters = regionFilters.split(",");
@@ -144,6 +145,19 @@ class ListingController {
       filters.$or = regionFilters.map((region) => ({
         customSlug: new RegExp(region, "i"),
       }));
+    }
+
+    if (query) {
+      filters.$and = [
+        ...(filters.$or ? [{ $or: filters.$or }] : []),
+        {
+          $or: [
+            { businessName: new RegExp(query, "i") },
+            { businessURL: new RegExp(query, "i") },
+          ],
+        },
+      ];
+      delete filters.$or;
     }
 
     try {

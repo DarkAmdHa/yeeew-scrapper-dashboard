@@ -10,6 +10,11 @@ import TypesArray from "../components/TypesArray";
 import RoomTypes from "../components/RoomTypes";
 import Amenities from "../components/Amenities";
 import Surroundings from "../components/Surroundings";
+import APIContent from "../components/APIContent";
+import HotelsAPIData from "../components/HotelsAPIData";
+import BookingAPIData from "../components/BookingAPIData";
+import PriceLineAPIData from "../components/PriceLineAPIData";
+import TripAdvisorAPIData from "../components/TripAdvisorAPIData";
 
 const initialState = {
   businessName: "",
@@ -550,570 +555,32 @@ export default function BusinessPage() {
             {changeableListing &&
               changeableListing.apiData &&
               changeableListing.apiData.booking && (
-                <div className=" py-6 sm:py-4">
-                  <div className="grid grid-cols-1 gap-x-2 gap-y-4 sm:grid-cols-6">
-                    <div className="sm:col-span-3">
-                      <div className="block text-2xl font-medium leading-6 text-white">
-                        Booking API
-                      </div>
-                    </div>
-
-                    <div className="sm:col-span-6">
-                      <label
-                        htmlFor="email"
-                        className="block text-sm font-medium leading-6 text-white"
-                      >
-                        Platform ID
-                      </label>
-                      <div className="mt-2 text-white">
-                        {changeableListing.apiData.booking.id}
-                      </div>
-                    </div>
-                    <div className="sm:col-span-6">
-                      <label
-                        htmlFor="email"
-                        className="block text-sm font-medium leading-6 text-white"
-                      >
-                        Platform Data
-                      </label>
-                      <p className="mt-2 text-white overflow-hidden whitespace-break-spaces">
-                        Description:
-                        <ul>
-                          {changeableListing.apiData.booking.data.description &&
-                            changeableListing.apiData.booking.data.description.map(
-                              (des, index) => <li key={index}>{des}</li>
-                            )}
-                        </ul>
-                      </p>
-                      <p className="mt-2 text-white overflow-hidden whitespace-break-spaces">
-                        Policies:
-                        <ul>
-                          {changeableListing.apiData.booking.data.policies &&
-                            changeableListing.apiData.booking.data.policies.map(
-                              (pol, index) => <li key={index}>{pol}</li>
-                            )}
-                        </ul>
-                      </p>
-                      <p className="mt-2 text-white overflow-hidden whitespace-break-spaces">
-                        Closest Landmarks:
-                        <ul>
-                          {changeableListing.apiData.booking.data.landmarks &&
-                            changeableListing.apiData.booking.data.landmarks
-                              .closestLandmarks &&
-                            changeableListing.apiData.booking.data.landmarks.closestLandmarks.map(
-                              (land, index) => (
-                                <li key={index}>
-                                  Latitude: {land.lat} <br />
-                                  Longitude: {land.long} <br />
-                                  Name: {land.name} <br />
-                                  Distance: {land.distance} <br />
-                                  Votes: {land.votes} <br />
-                                  Review: {land.review} <br />
-                                </li>
-                              )
-                            )}
-                        </ul>
-                      </p>
-                      <p className="mt-2 text-white overflow-hidden whitespace-break-spaces">
-                        Popular Landmarks:
-                        <ul>
-                          {changeableListing.apiData.booking.data.landmarks &&
-                            changeableListing.apiData.booking.data.landmarks
-                              .popularLandmarks &&
-                            changeableListing.apiData.booking.data.landmarks.popularLandmarks.map(
-                              (land, index) => (
-                                <li key={index}>
-                                  Latitude: {land.lat} <br />
-                                  Longitude: {land.long} <br />
-                                  Name: {land.name} <br />
-                                  Distance: {land.distance} <br />
-                                  Votes: {land.votes} <br />
-                                  Review: {land.review} <br />
-                                </li>
-                              )
-                            )}
-                        </ul>
-                      </p>
-                      <p className="mt-2 text-white overflow-hidden whitespace-break-spaces">
-                        Coordinates: Latitude:{" "}
-                        {changeableListing.apiData.booking.data.coordinates &&
-                          changeableListing.apiData.booking.data.coordinates
-                            .lat}{" "}
-                        <br />
-                        Longitude:{" "}
-                        {changeableListing.apiData.booking.data.coordinates &&
-                          changeableListing.apiData.booking.data.coordinates
-                            .long}{" "}
-                        <br />
-                      </p>
-                    </div>
-                  </div>
-                </div>
+                <BookingAPIData
+                  bookingData={changeableListing.apiData.booking}
+                />
               )}
             {changeableListing &&
               changeableListing.apiData &&
               changeableListing.apiData.hotels && (
-                <div className=" py-6 sm:py-4">
-                  <div className="grid grid-cols-1 gap-x-2 gap-y-4 sm:grid-cols-6">
-                    <div className="sm:col-span-3">
-                      <div className="block text-2xl font-medium leading-6 text-white">
-                        Hotels API
-                      </div>
-                    </div>
-                    <div className="col-span-6 h-[1px] w-full bg-gray-500"></div>
-
-                    <div className="sm:col-span-6">
-                      <label
-                        htmlFor="platform-id"
-                        className="block text-lg font-medium leading-6 text-white"
-                      >
-                        Platform ID
-                      </label>
-                      <div className="mt-2 text-white">
-                        {changeableListing.apiData.hotels.id}
-                      </div>
-                    </div>
-
-                    <div className="sm:col-span-6">
-                      <label
-                        htmlFor="coordinates"
-                        className="block text-lg font-medium leading-6 text-white"
-                      >
-                        Platform Data
-                      </label>
-                      <p className="mt-2 text-white overflow-hidden whitespace-break-spaces">
-                        Coordinates: <br />
-                        Latitude:{" "}
-                        {changeableListing.apiData.hotels.data.coordinates &&
-                          changeableListing.apiData.hotels.data.coordinates
-                            .lat}{" "}
-                        <br />
-                        Longitude:{" "}
-                        {changeableListing.apiData.hotels.data.coordinates &&
-                          changeableListing.apiData.hotels.data.coordinates
-                            .long}{" "}
-                        <br />
-                      </p>
-                    </div>
-
-                    <div className="sm:col-span-6">
-                      <label
-                        htmlFor="summary"
-                        className="block text-lg font-medium leading-6 text-white"
-                      >
-                        Summary
-                      </label>
-                      <p className="mt-2 text-white overflow-hidden whitespace-break-spaces">
-                        <span className="block text-lg font-medium leading-6 text-white">
-                          Tagline:{" "}
-                        </span>
-                        {changeableListing.apiData.hotels.data.summary.tagLine}{" "}
-                        <br />
-                        <span className="block text-lg font-medium leading-6 text-white">
-                          Policies:{" "}
-                        </span>
-                        {changeableListing.apiData.hotels.data.summary
-                          .policies && (
-                          <>
-                            {changeableListing.apiData.hotels.data.summary
-                              .policies.checkinInstructions && (
-                              <span>
-                                Check-in Instructions:{" "}
-                                {changeableListing.apiData.hotels.data.summary.policies.checkinInstructions.join(
-                                  ", "
-                                )}
-                                <br />
-                              </span>
-                            )}
-                            {changeableListing.apiData.hotels.data.summary
-                              .policies.needToKnow && (
-                              <span>
-                                Need to Know:{" "}
-                                {changeableListing.apiData.hotels.data.summary.policies.needToKnow.join(
-                                  ", "
-                                )}
-                                <br />
-                              </span>
-                            )}
-                            {changeableListing.apiData.hotels.data.summary
-                              .policies.childAndBed && (
-                              <span>
-                                Child and Bed:{" "}
-                                {changeableListing.apiData.hotels.data.summary.policies.childAndBed.join(
-                                  ", "
-                                )}
-                                <br />
-                              </span>
-                            )}
-                            {changeableListing.apiData.hotels.data.summary
-                              .policies.paymentOptions && (
-                              <span>
-                                Payment Options:{" "}
-                                {changeableListing.apiData.hotels.data.summary.policies.paymentOptions.join(
-                                  ", "
-                                )}
-                                <br />
-                              </span>
-                            )}
-                            {changeableListing.apiData.hotels.data.summary
-                              .policies.pets && (
-                              <span>
-                                Pets:{" "}
-                                {changeableListing.apiData.hotels.data.summary.policies.pets.join(
-                                  ", "
-                                )}
-                                <br />
-                              </span>
-                            )}
-                            {changeableListing.apiData.hotels.data.summary
-                              .policies.shouldMention && (
-                              <span>
-                                Should Mention:{" "}
-                                {changeableListing.apiData.hotels.data.summary.policies.shouldMention.join(
-                                  ", "
-                                )}
-                                <br />
-                              </span>
-                            )}
-                          </>
-                        )}
-                        <br />
-                        <span className="block text-lg font-medium leading-6 text-white">
-                          Highlights:{" "}
-                        </span>
-                        <br />
-                        {changeableListing.apiData.hotels.data.summary
-                          .highlights && (
-                          <>
-                            {changeableListing.apiData.hotels.data.summary
-                              .highlights.amenities && (
-                              <span>
-                                Amenities:{" "}
-                                {changeableListing.apiData.hotels.data.summary.highlights.amenities.join(
-                                  ", "
-                                )}
-                                <br />
-                              </span>
-                            )}
-                            {changeableListing.apiData.hotels.data.summary
-                              .highlights.topAmenities && (
-                              <span>
-                                Top Amenities:{" "}
-                                {changeableListing.apiData.hotels.data.summary.highlights.topAmenities.join(
-                                  ", "
-                                )}
-                                <br />
-                              </span>
-                            )}
-                            {changeableListing.apiData.hotels.data.summary
-                              .highlights.highlight && (
-                              <span>
-                                Highlights:{" "}
-                                {changeableListing.apiData.hotels.data.summary.highlights.highlight.join(
-                                  ", "
-                                )}
-                                <br />
-                              </span>
-                            )}
-                            {changeableListing.apiData.hotels.data.summary
-                              .highlights.property && (
-                              <span>
-                                Property:{" "}
-                                {changeableListing.apiData.hotels.data.summary.highlights.property.join(
-                                  ", "
-                                )}
-                                <br />
-                              </span>
-                            )}
-                          </>
-                        )}
-                        <br />
-                        <span className="block text-lg font-medium leading-6 text-white">
-                          Location:{" "}
-                        </span>
-                        {changeableListing.apiData.hotels.data.summary
-                          .location && (
-                          <>
-                            {changeableListing.apiData.hotels.data.summary
-                              .location.whatsAround && (
-                              <span>
-                                What's Around:{" "}
-                                {changeableListing.apiData.hotels.data.summary.location.whatsAround.join(
-                                  ", "
-                                )}
-                                <br />
-                              </span>
-                            )}
-                            {changeableListing.apiData.hotels.data.summary
-                              .location.mapImage && (
-                              <span>
-                                Map Image:{" "}
-                                <a
-                                  href={
-                                    changeableListing.apiData.hotels.data
-                                      .summary.location.mapImage
-                                  }
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-blue-400 underline"
-                                >
-                                  View Map
-                                </a>
-                                <br />
-                              </span>
-                            )}
-                          </>
-                        )}
-                        <br />
-                        <span className="block text-lg font-medium leading-6 text-white">
-                          Nearby POIs:{" "}
-                        </span>
-                        {changeableListing.apiData.hotels.data.summary
-                          .nearbyPOIs &&
-                          changeableListing.apiData.hotels.data.summary.nearbyPOIs.map(
-                            (poi, index) => (
-                              <span key={index}>
-                                {poi.text}: {poi.moreInfo}
-                                <br />
-                              </span>
-                            )
-                          )}
-                      </p>
-                    </div>
-
-                    <div className="sm:col-span-6">
-                      <span className="block text-lg font-medium leading-6 text-white">
-                        Review Info:{" "}
-                      </span>
-
-                      <div className="mt-2 text-white">
-                        {changeableListing.apiData.hotels.data.reviewInfo}
-                      </div>
-                    </div>
-
-                    <div className="sm:col-span-6">
-                      <span className="block text-lg font-medium leading-6 text-white">
-                        Property Gallery{" "}
-                      </span>
-
-                      <div className="mt-2 text-white">
-                        {changeableListing.apiData.hotels.data
-                          .propertyGallery && (
-                          <ScrappedImages
-                            imageUrls={changeableListing.apiData.hotels.data.propertyGallery.map(
-                              (gallery) => ({
-                                src: gallery.url,
-                                width: 800,
-                                height: 600,
-                              })
-                            )}
-                          />
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="sm:col-span-6">
-                      <label
-                        htmlFor="content-sections"
-                        className="block text-lg font-medium leading-6 text-white"
-                      >
-                        Property Content Sections
-                      </label>
-                      <div className="mt-2 text-white">
-                        About This Property:{" "}
-                        {changeableListing.apiData.hotels.data
-                          .propertyContentSectionGroups.aboutThisProperty &&
-                          changeableListing.apiData.hotels.data.propertyContentSectionGroups.aboutThisProperty.map(
-                            (about, index) => (
-                              <span key={index}>
-                                {about}
-                                <br />
-                              </span>
-                            )
-                          )}{" "}
-                        <br />
-                        Policies:{" "}
-                        {changeableListing.apiData.hotels.data
-                          .propertyContentSectionGroups.policies &&
-                          changeableListing.apiData.hotels.data.propertyContentSectionGroups.policies.map(
-                            (policy, index) => (
-                              <span key={index}>
-                                {policy}
-                                <br />
-                              </span>
-                            )
-                          )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                <HotelsAPIData hotelsData={changeableListing.apiData.hotels} />
               )}
             {changeableListing &&
               changeableListing.apiData &&
               changeableListing.apiData.priceline && (
-                <div className=" py-6 sm:py-4">
-                  <div className="grid grid-cols-1 gap-x-2 gap-y-4 sm:grid-cols-6">
-                    <div className="sm:col-span-3">
-                      <div className="block text-2xl font-medium leading-6 text-white">
-                        Priceline API
-                      </div>
-                    </div>
-
-                    <div className="sm:col-span-6">
-                      <label
-                        htmlFor="platform-id"
-                        className="block text-lg font-medium leading-6 text-white"
-                      >
-                        Platform ID
-                      </label>
-                      <div className="mt-2 text-white">
-                        {changeableListing.apiData.priceline.id}
-                      </div>
-                    </div>
-
-                    <div className="sm:col-span-6">
-                      <label
-                        htmlFor="coordinates"
-                        className="block text-lg font-medium leading-6 text-white"
-                      >
-                        Platform Data
-                      </label>
-                      <p className="mt-2 text-white overflow-hidden whitespace-break-spaces">
-                        Coordinates: <br />
-                        Latitude:{" "}
-                        {
-                          changeableListing.apiData.priceline.data.coordinates
-                            .lat
-                        }{" "}
-                        <br />
-                        Longitude:{" "}
-                        {
-                          changeableListing.apiData.priceline.data.coordinates
-                            .long
-                        }{" "}
-                        <br />
-                      </p>
-                    </div>
-
-                    <div className="sm:col-span-6">
-                      <label
-                        htmlFor="description"
-                        className="block text-lg font-medium leading-6 text-white"
-                      >
-                        Description
-                      </label>
-                      <p className="mt-2 text-white overflow-hidden whitespace-break-spaces">
-                        {changeableListing.apiData.priceline.data.description}
-                      </p>
-                    </div>
-
-                    <div className="sm:col-span-6">
-                      <label
-                        htmlFor="policies"
-                        className="block text-lg font-medium leading-6 text-white"
-                      >
-                        Policies
-                      </label>
-                      <p className="mt-2 text-white overflow-hidden whitespace-break-spaces">
-                        {changeableListing.apiData.priceline.data.policies && (
-                          <>
-                            {changeableListing.apiData.priceline.data.policies
-                              .childrenDescription && (
-                              <span>
-                                Children Description:{" "}
-                                {
-                                  changeableListing.apiData.priceline.data
-                                    .policies.childrenDescription
-                                }
-                                <br />
-                              </span>
-                            )}
-                            {changeableListing.apiData.priceline.data.policies
-                              .petDescription && (
-                              <span>
-                                Pet Description:{" "}
-                                {
-                                  changeableListing.apiData.priceline.data
-                                    .policies.petDescription
-                                }
-                                <br />
-                              </span>
-                            )}
-                            {changeableListing.apiData.priceline.data.policies
-                              .importantInfo && (
-                              <span>
-                                Important Info:{" "}
-                                {changeableListing.apiData.priceline.data.policies.importantInfo.join(
-                                  ", "
-                                )}
-                                <br />
-                              </span>
-                            )}
-                          </>
-                        )}
-                      </p>
-                    </div>
-
-                    <div className="sm:col-span-6">
-                      <label
-                        htmlFor="highlights"
-                        className="block text-lg font-medium leading-6 text-white"
-                      >
-                        Highlights
-                      </label>
-                      <p className="mt-2 text-white overflow-hidden whitespace-break-spaces">
-                        {changeableListing.apiData.priceline.data
-                          .highlights && (
-                          <>
-                            {changeableListing.apiData.priceline.data.highlights
-                              .features && (
-                              <span>
-                                Features:{" "}
-                                {changeableListing.apiData.priceline.data.highlights.features.join(
-                                  ", "
-                                )}
-                                <br />
-                              </span>
-                            )}
-                            {changeableListing.apiData.priceline.data.highlights
-                              .hotelAmenities && (
-                              <span>
-                                Hotel Amenities:{" "}
-                                {changeableListing.apiData.priceline.data.highlights.hotelAmenities.join(
-                                  ", "
-                                )}
-                                <br />
-                              </span>
-                            )}
-                          </>
-                        )}
-                      </p>
-                    </div>
-
-                    <div className="sm:col-span-6">
-                      <label
-                        htmlFor="property-gallery"
-                        className="block text-lg font-medium leading-6 text-white"
-                      >
-                        Property Gallery
-                      </label>
-                      <div className="mt-2 text-white">
-                        {changeableListing.apiData.priceline.data
-                          .propertyGallery && (
-                          <ScrappedImages
-                            imageUrls={changeableListing.apiData.priceline.data.propertyGallery.map(
-                              (gallery) => ({
-                                src: gallery.imageUrl,
-                                width: 800,
-                                height: 600,
-                              })
-                            )}
-                          />
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                <>
+                  <PriceLineAPIData
+                    priceLineData={changeableListing.apiData.priceline}
+                  />
+                </>
+              )}
+            {changeableListing &&
+              changeableListing.apiData &&
+              changeableListing.apiData.tripadvisor && (
+                <>
+                  <TripAdvisorAPIData
+                    tripadvisorData={changeableListing.apiData.tripadvisor}
+                  />
+                </>
               )}
           </div>
           <div className="flex items-center justify-end gap-x-6 border-t border-gray-500/10 px-4 py-4 sm:px-8"></div>
@@ -1130,10 +597,47 @@ export default function BusinessPage() {
             information scrapped
           </p>
         </div>
-
-        <form className="bg-gray-800 shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl md:col-span-2">
+        <div className="bg-gray-800 shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl md:col-span-2">
           <div className="px-4 py-6 sm:p-8">
             <div className="flex flex-col max-w-2xl  gap-x-6 gap-y-8 ">
+              <APIContent
+                heading="Overview"
+                content={changeableListing.overview}
+                subheading="Provide an overview of the business"
+              />
+              <APIContent
+                heading="About Accommodation"
+                content={changeableListing.aboutAccomodation}
+                subheading="Provide a brief description of the accommodation"
+              />
+              <APIContent
+                heading="Food & Inclusions"
+                content={changeableListing.foodInclusions}
+                subheading="Describe the food options and other inclusions provided by
+                    the accommodation"
+              />
+              <APIContent
+                heading="Specific Surfing Spots"
+                content={changeableListing.specificSurfSpots}
+                subheading="List specific surfing spots related to the business"
+              />
+              <APIContent
+                heading="Getting There"
+                content={changeableListing.gettingThere}
+                subheading="Describe how to get to the business address"
+              />
+              <FAQComponent
+                faqs={changeableListing.faq}
+                setFaqs={setChangeableListing}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* <form className="bg-gray-800 shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl md:col-span-2">
+          <div className="px-4 py-6 sm:p-8">
+            <div className="flex flex-col max-w-2xl  gap-x-6 gap-y-8 ">
+
               <div className="">
                 <label
                   htmlFor="overview"
@@ -1273,8 +777,8 @@ export default function BusinessPage() {
             >
               Save
             </button> */}
-          </div>
-        </form>
+        {/* </div>
+        </form>  */}
       </div>
 
       {/* COmented code at /coments */}

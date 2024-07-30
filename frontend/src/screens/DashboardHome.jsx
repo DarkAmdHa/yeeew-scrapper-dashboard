@@ -37,12 +37,15 @@ export default function DashboardHome() {
   const [sortBy, setSortBy] = useState("");
   const [regionFilters, setRegionFilters] = useState([]);
 
+  const [query, setQuery] = useState("");
+
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
 
   useEffect(() => {
     const pageParam = searchParams.get("page");
     const sortByParam = searchParams.get("sortBy");
+    const queryParam = searchParams.get("query");
     const regionFilterParam = searchParams.get("regionFilter");
     if (pageParam) {
       setCurrentPage(+pageParam);
@@ -54,6 +57,11 @@ export default function DashboardHome() {
     }
     if (regionFilterParam) {
       setRegionFilters(regionFilterParam.split(","));
+    }
+    if (queryParam) {
+      setQuery(queryParam);
+    } else {
+      setQuery("");
     }
   }, [searchParams]);
 
@@ -180,7 +188,7 @@ export default function DashboardHome() {
 
   useEffect(() => {
     if (token && currentPage) fetchListings();
-  }, [currentPage, token, sortBy, regionFilters]);
+  }, [currentPage, token, sortBy, query, regionFilters]);
 
   const fetchListings = async () => {
     setLoading(true);
@@ -189,6 +197,7 @@ export default function DashboardHome() {
         currentPage,
         10,
         sortBy,
+        query,
         regionFilters,
         token
       );
@@ -223,10 +232,11 @@ export default function DashboardHome() {
   const handleSortBy = (criteria) => {
     setSortBy(criteria);
     setCurrentPage(1);
-    setSearchParams((prev) => ({
-      ...prev,
-      sortBy: criteria,
-    }));
+
+    const newParam = new URLSearchParams(searchParams);
+    newParam.delete("sortBy");
+    if (criteria) newParam.append("sortBy", criteria);
+    setSearchParams(newParam);
   };
 
   const handleRegionFilter = (value) => {
@@ -238,10 +248,11 @@ export default function DashboardHome() {
     }
     setRegionFilters(newRegionFilters);
 
-    setSearchParams((prev) => ({
-      ...prev,
-      regionFilter: newRegionFilters.join(","),
-    }));
+    const newParam = new URLSearchParams(searchParams);
+    newParam.delete("regionFilter");
+    if (newRegionFilters)
+      newParam.append("regionFilter", newRegionFilters.join(","));
+    setSearchParams(newParam);
   };
   const runScrapper = () => {
     console.log("Running");

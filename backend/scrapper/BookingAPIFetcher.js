@@ -33,7 +33,7 @@ class BookingAPIFetcher {
       url: "https://booking-com15.p.rapidapi.com/api/v1/hotels/searchDestination",
       params: { query: businessName },
       headers: {
-        "x-rapidapi-key": "2573a59d87mshf5f308cc83e4bafp12b673jsnffc706feb184",
+        "x-rapidapi-key": process.env.RAPID_API_KEY,
         "x-rapidapi-host": "booking-com15.p.rapidapi.com",
       },
     };
@@ -59,7 +59,7 @@ class BookingAPIFetcher {
       url: "https://booking-com15.p.rapidapi.com/api/v1/hotels/getDescriptionAndInfo",
       params: { hotel_id: this.entityId, languagecode: "en-us" },
       headers: {
-        "x-rapidapi-key": "2573a59d87mshf5f308cc83e4bafp12b673jsnffc706feb184",
+        "x-rapidapi-key": process.env.RAPID_API_KEY,
         "x-rapidapi-host": "booking-com15.p.rapidapi.com",
       },
     };
@@ -80,7 +80,7 @@ class BookingAPIFetcher {
       url: "https://booking-com15.p.rapidapi.com/api/v1/hotels/getHotelPolicies",
       params: { hotel_id: this.entityId, languagecode: "en-us" },
       headers: {
-        "x-rapidapi-key": "2573a59d87mshf5f308cc83e4bafp12b673jsnffc706feb184",
+        "x-rapidapi-key": process.env.RAPID_API_KEY,
         "x-rapidapi-host": "booking-com15.p.rapidapi.com",
       },
     };
@@ -103,7 +103,7 @@ class BookingAPIFetcher {
       url: "https://booking-com15.p.rapidapi.com/api/v1/hotels/getPopularAttractionNearBy",
       params: { hotel_id: this.entityId, languagecode: "en-us" },
       headers: {
-        "x-rapidapi-key": "2573a59d87mshf5f308cc83e4bafp12b673jsnffc706feb184",
+        "x-rapidapi-key": process.env.RAPID_API_KEY,
         "x-rapidapi-host": "booking-com15.p.rapidapi.com",
       },
     };

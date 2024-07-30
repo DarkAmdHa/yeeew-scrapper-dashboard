@@ -35,7 +35,7 @@ class HotelsAPIFetcher {
         locale: "en_GB",
       },
       headers: {
-        "x-rapidapi-key": process.env.RAPID_API_HOTELS_KEY,
+        "x-rapidapi-key": process.env.RAPID_API_KEY,
         "x-rapidapi-host": "hotels-com-provider.p.rapidapi.com",
       },
     };
@@ -69,7 +69,7 @@ class HotelsAPIFetcher {
       url: "https://hotels-com-provider.p.rapidapi.com/v2/hotels/details",
       params: { hotel_id: this.entityId, domain: "AE", locale: "en_GB" },
       headers: {
-        "x-rapidapi-key": process.env.RAPID_API_HOTELS_KEY,
+        "x-rapidapi-key": process.env.RAPID_API_KEY,
         "x-rapidapi-host": "hotels-com-provider.p.rapidapi.com",
       },
     };
