@@ -32,7 +32,11 @@ class Export {
     if (this.businessData.apiData) {
       const findFirstCoordinatesData = Object.keys(
         this.businessData.apiData
-      ).find((key) => this.businessData.apiData[key].data.coordinates);
+      ).find(
+        (key) =>
+          this.businessData.apiData[key].data &&
+          this.businessData.apiData[key].data.coordinates
+      );
       if (findFirstCoordinatesData) {
         latFromAPI =
           this.businessData.apiData[findFirstCoordinatesData].data.coordinates
