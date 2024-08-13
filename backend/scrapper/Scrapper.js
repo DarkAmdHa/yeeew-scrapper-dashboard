@@ -565,7 +565,7 @@ class Scrapper {
         response.uploadedImageLocations &&
         response.uploadedImageLocations.length
       )
-        imagesFromMain.push([...response.uploadedImageLocations]);
+        imagesFromMain.push(...response.uploadedImageLocations);
       visitedLinks.push(response.parsedJSONResponse.nextLink);
     }
 
@@ -759,7 +759,7 @@ class Scrapper {
       images = await page.evaluate(() => {
         const imagesArray = [];
         document.querySelectorAll("img").forEach((image, index) => {
-          if (image.naturalWidth >= 800 && index <= 20) {
+          if (image.naturalWidth >= 1500 && index <= 20) {
             // Check image sizer
             imagesArray.push(image.src);
           }
