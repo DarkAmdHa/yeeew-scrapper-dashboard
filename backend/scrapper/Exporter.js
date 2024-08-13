@@ -427,13 +427,13 @@ class Export {
             approved: true,
           };
 
-          if (item.publishedDate) {
-            const date = new Date(item.publishedDate);
-            if (date != "Invalid Date") {
-              const formattedDate = formatDate(date);
-              obj.time = formatDate(formattedDate);
-            }
-          }
+          // if (item.publishedDate) {
+          //   const date = new Date(item.publishedDate);
+          //   if (date != "Invalid Date") {
+          //     const formattedDate = formatDate(date);
+          //     obj.time = formatDate(formattedDate);
+          //   }
+          // }
 
           return obj;
         });
