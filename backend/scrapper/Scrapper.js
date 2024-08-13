@@ -5,6 +5,7 @@ import { writeFile } from "fs/promises";
 import { downloadImgToLocal, deleteImgFromLocal } from "./tempStorage.js";
 import categorizeImage from "./categorizeImage.js";
 import pt from "puppeteer";
+import { fileTypeFromBuffer } from "file-type";
 
 import Listing from "../models/listingModel.js";
 import Operation from "../models/operationModel.js";
@@ -13,6 +14,7 @@ import BookingAPIFetcher from "./BookingAPIFetcher.js";
 import PricelineAPIFetcher from "./PricelineAPIFetcher.js";
 import HotelsAPIFetcher from "./HotelsAPIFetcher.js";
 import TripAdvisorFetcher from "./TripAdvisorFetcher.js";
+import { highlightsBlueprint } from "./constants.js";
 
 class Scrapper {
   constructor(businessData, operationId) {
@@ -57,6 +59,7 @@ class Scrapper {
     );
     this.scrapedData = await this.scrapeDataFromGoogle(
       this.businessData.businessName,
+      this.businessData.businessLocation,
       this.scrapedData
     );
     if (process.env.NODE_ENV != "development")
@@ -113,7 +116,10 @@ class Scrapper {
   async scrapeFromBookingAPI() {
     try {
       const resortFetcher = new BookingAPIFetcher(
-        this.businessData.businessName
+        this.businessData.businessName +
+          (this.businessData.businessLocation
+            ? " " + this.businessData.businessLocation
+            : "")
       );
       const apiResponse = await resortFetcher.init();
       console.log(apiResponse);
@@ -135,7 +141,10 @@ class Scrapper {
   async scrapeFromPricelineAPI() {
     try {
       const resortFetcher = new PricelineAPIFetcher(
-        this.businessData.businessName
+        this.businessData.businessName +
+          (this.businessData.businessLocation
+            ? " " + this.businessData.businessLocation
+            : "")
       );
       const apiResponse = await resortFetcher.init();
 
@@ -157,7 +166,10 @@ class Scrapper {
   async scrapeFromHotelsAPI() {
     try {
       const resortFetcher = new HotelsAPIFetcher(
-        this.businessData.businessName
+        this.businessData.businessName +
+          (this.businessData.businessLocation
+            ? " " + this.businessData.businessLocation
+            : "")
       );
       const apiResponse = await resortFetcher.init();
 
@@ -178,7 +190,10 @@ class Scrapper {
   async scrapeFromTripAdvisor() {
     try {
       const resortFetcher = new TripAdvisorFetcher(
-        this.businessData.businessName
+        this.businessData.businessName +
+          (this.businessData.businessLocation
+            ? " " + this.businessData.businessLocation
+            : "")
       );
       const apiResponse = await resortFetcher.init();
 
@@ -560,10 +575,14 @@ class Scrapper {
     return { mainSiteData: response.parsedJSONResponse.data, imagesFromMain };
   }
 
-  findListingOnGoogle = async (businessName, platform) => {
+  findListingOnGoogle = async (businessName, businessLocation, platform) => {
     const prompt = `Use the following Google.com code to look for ${businessName}'s listing on ${platform}. Make sure you return the actual link if it only partains to the platform ${platform}. There might be ads, or similar looking pages, or even the business' main site, or reviews or other pages but these should all be ignored. We only want the listing of ${businessName} on the ${platform}, not reviews or other pages related to the business.If such a listing is not found in the provided code, return an error in json i.e error: "not found"`;
     const link = `https://www.google.com/search?q=${encodeURIComponent(
-      businessName + " site:" + platform
+      businessName +
+        " " +
+        (businessLocation ? businessLocation : "") +
+        "site:" +
+        platform
     )}`;
     return await this.communicateWithOpenAi(link, prompt);
   };
@@ -764,20 +783,21 @@ class Scrapper {
     // Loop through each image URL
     for (const imageUrl of images) {
       try {
-        // Remove query parameters from URL
-        const cleanImageUrl = imageUrl.split("?")[0];
+        const response = await fetch(imageUrl);
+        if (!response.ok) {
+          throw new Error("Invalid URL");
+        }
+        const data = await response.arrayBuffer();
+        const imageData = Buffer.from(data);
 
-        // Download the image from the URL
-        const response = await axios.get(imageUrl, {
-          responseType: "arraybuffer",
-        });
-        const imageData = Buffer.from(response.data, "binary");
+        const fileType = await fileTypeFromBuffer(data);
+        if (!fileType || !fileType.ext) {
+          throw new Error("Image of no type");
+        }
 
-        // Extract the file extension from the URL
-        const fileExtension = path.extname(cleanImageUrl);
-
-        /****Detect Image Labels With Cloud Vision API: */
-        const tempFilePath = `./temp/file_${new Date().getTime()}${fileExtension}`;
+        const tempFilePath = `./temp/file_${new Date().getTime()}.${
+          fileType.ext
+        }`;
         let imageLabel;
 
         try {
@@ -794,7 +814,9 @@ class Scrapper {
         // Set the S3 parameters
         const params = {
           Bucket: bucketName,
-          Key: `${folderName}/${imageLabel}/${Date.now()}_image${fileExtension}`, // Use a unique key for the image file
+          Key: `${folderName}/${imageLabel}/${Date.now()}_image.${
+            fileType.ext
+          }`, // Use a unique key for the image file
           Body: imageData,
         };
 
@@ -855,6 +877,11 @@ class Scrapper {
     prompt2 = prompt2.replace(
       "{{ relevantLinks }}",
       JSON.stringify(relevantLinks)
+    );
+
+    prompt2 = prompt2.replace(
+      "{{ highlightsBlueprint }}",
+      JSON.stringify(highlightsBlueprint)
     );
 
     const content = await this.regularOpenAi("", prompt2, returnAsJson);
@@ -1158,7 +1185,7 @@ class Scrapper {
           true,
           ""
         );
-      const cleanedContent = await this.regularFetch(link, scrapeImages);
+      // const cleanedContent = await this.regularFetch(link, scrapeImages);
       const messages = [
         {
           role: "system",
@@ -1208,10 +1235,10 @@ class Scrapper {
     }
   };
 
-  async scrapeDataFromGoogle(businessName, businessData) {
+  async scrapeDataFromGoogle(businessName, businessLocation, businessData) {
     try {
       const link = `https://www.google.com/search?q=${encodeURIComponent(
-        businessName
+        businessName + (businessLocation ? " " + businessLocation : "")
       )}`;
 
       const pageGoogleHTML = await this.regularFetch(link);
@@ -1280,6 +1307,7 @@ class Scrapper {
     const prompts = await this.getPrompts();
 
     const businessName = originalData.businessName;
+    const businessLocation = originalData.businessLocation;
     businessData.data.scrapeImages = true;
     businessData.data.platformSummaries = {};
 
@@ -1319,6 +1347,7 @@ class Scrapper {
       try {
         const listingUrlData = await this.findListingOnGoogle(
           businessName,
+          businessLocation,
           platformURL
         );
 

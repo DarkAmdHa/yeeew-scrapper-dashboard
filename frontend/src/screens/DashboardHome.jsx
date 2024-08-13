@@ -29,6 +29,8 @@ export default function DashboardHome() {
   const [loading, setLoading] = useState(false);
   const [confirm, setConfirm] = useState(false);
   const [confirm2, setConfirm2] = useState(false);
+  const [exportToTest, setExportToTest] = useState(false);
+
   const [confirm3, setConfirm3] = useState(false);
   const [currentPage, setCurrentPage] = useState(null);
   const [totalPages, setTotalPages] = useState(1);
@@ -160,6 +162,7 @@ export default function DashboardHome() {
           data: {
             type: "Export",
             listings: selectedItems,
+            exportToYeeewTest: exportToTest,
           },
         },
         {
@@ -181,6 +184,7 @@ export default function DashboardHome() {
       }
     } finally {
       setSelectedItems([]);
+      setExportToTest(false);
 
       setLoading(false);
     }
@@ -550,6 +554,9 @@ export default function DashboardHome() {
             onAccept={handleExport}
             heading="Are you sure ?"
             text="These business listings will be exported to Yeeew! with their scrapped data."
+            checkboxText="Export to Yeeew Dev ?"
+            checkbox={exportToTest}
+            handleCheckboxChange={setExportToTest}
             mode=""
           />
         )}
@@ -732,6 +739,12 @@ export default function DashboardHome() {
                 </th>
                 <th
                   scope="col"
+                  className="hidden py-2 pl-0 pr-8 font-semibold sm:table-cell"
+                >
+                  Business Location
+                </th>
+                <th
+                  scope="col"
                   className="py-2 pl-0 pr-4 text-right font-semibold sm:pr-8 sm:text-left lg:pr-20"
                 >
                   Status
@@ -779,6 +792,23 @@ export default function DashboardHome() {
                             {item.businessURL}
                             <span className="text-gray-500">
                               {!item.businessURL && "N/A"}
+                            </span>
+                          </div>
+                        </div>
+                      </Link>
+                    </div>
+                  </td>
+                  <td className="overflow-hidden">
+                    <div className="flex items-center gap-x-4   max-w-52">
+                      <Link
+                        to={`/dashboard/business/${item._id}`}
+                        className="hidden py-4 pl-0 pr-4 sm:flex sm:pr-8"
+                      >
+                        <div className="flex gap-x-3">
+                          <div className="font-mono text-sm leading-6 text-blue-400 overflow-ellipsis  break-words">
+                            {item.businessLocation}
+                            <span className="text-gray-500">
+                              {!item.businessLocation && "N/A"}
                             </span>
                           </div>
                         </div>

@@ -45,7 +45,8 @@ function TripAdvisorReview({ review }) {
             >
               {review.userProfile.displayName}
             </a>{" "}
-            wrote a review
+            wrote a review{" "}
+            {review.publishedDate && `on ${review.publishedDate}`}
           </p>
           <p>{review.userProfile.contributionCount}</p>
         </div>

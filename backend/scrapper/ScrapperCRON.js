@@ -45,6 +45,9 @@ export async function checkAndInitiateScrappingOperation() {
           if (listing) {
             const data = {
               businessName: listing.businessName,
+              businessLocation: listing.businessLocation
+                ? listing.businessLocation
+                : "",
               businessURL: listing.businessURL ? listing.businessURL : "",
               _id: listing._id,
             };

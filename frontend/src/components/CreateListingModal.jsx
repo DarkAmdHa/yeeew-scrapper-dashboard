@@ -8,6 +8,7 @@ import Spinner from "./Spinner";
 export default function CreateListingModal({ onClose }) {
   const [open, setOpen] = useState(true);
   const [businessName, setBusinessName] = useState("");
+  const [businessLocation, setBusinessLocation] = useState("");
   const [businessURL, setBusinessUrl] = useState("");
   const [errors, setErrors] = useState({});
 
@@ -21,6 +22,9 @@ export default function CreateListingModal({ onClose }) {
     if (!businessName) {
       validationErrors.businessName = "Business name is required.";
     }
+
+    if (!businessLocation)
+      validationErrors.businessLocation = "Business location is required.";
 
     const urlPattern = new RegExp(
       "^(https?:\\/\\/)?" +
@@ -42,7 +46,10 @@ export default function CreateListingModal({ onClose }) {
 
     try {
       setIsAdding(true);
-      const data = await createListing({ businessName, businessURL }, token);
+      const data = await createListing(
+        { businessName, businessURL, businessLocation },
+        token
+      );
 
       setOpen(false);
       if (onClose) onClose(true);
@@ -124,7 +131,33 @@ export default function CreateListingModal({ onClose }) {
                 </div>
                 <div>
                   <label
-                    htmlFor="businessName"
+                    htmlFor="businessLocation"
+                    className="block text-sm font-medium leading-6 text-gray-900"
+                  >
+                    Business Location <span className="text-red-500">*</span>
+                  </label>
+                  <div className="mt-2">
+                    <input
+                      id="businessLocation"
+                      name="businessLocation"
+                      type="businessLocation"
+                      placeholder="Business Name"
+                      value={businessLocation}
+                      onChange={(e) => setBusinessLocation(e.target.value)}
+                      required
+                      autoComplete="business-location"
+                      className="block w-full rounded-md border-2 bg-white/5 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-white/10 focus:ring-2 focus:ring-inset focus:ring-indigo-500 sm:text-sm sm:leading-6 px-2"
+                    />
+                    {errors.businessLocation && (
+                      <p className="mt-2 text-sm text-red-600">
+                        {errors.businessLocation}
+                      </p>
+                    )}
+                  </div>
+                </div>
+                <div>
+                  <label
+                    htmlFor="businessURL"
                     className="block text-sm font-medium leading-6 text-gray-900"
                   >
                     Business URL

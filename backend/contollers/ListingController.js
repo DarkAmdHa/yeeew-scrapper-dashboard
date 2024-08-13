@@ -44,6 +44,7 @@ class ListingController {
     const listingObject = {
       businessName: listingData.businessName,
       businessURL: listingData.businessURL,
+      businessLocation: listingData.businessLocation,
     };
 
     if (req.user) {
@@ -154,6 +155,7 @@ class ListingController {
           $or: [
             { businessName: new RegExp(query, "i") },
             { businessURL: new RegExp(query, "i") },
+            { businessLocation: new RegExp(query, "i") },
           ],
         },
       ];
@@ -163,7 +165,9 @@ class ListingController {
     try {
       const listings = await this.model
         .find(filters)
-        .select("businessName businessURL scraped scrapedAt timeToScrape")
+        .select(
+          "businessName businessURL businessLocation scraped scrapedAt timeToScrape"
+        )
         .sort(sort)
         .skip((page - 1) * limit)
         .limit(limit)
@@ -202,10 +206,11 @@ class ListingController {
         .on("headers", (headers) => {
           if (
             !headers.includes("Business Name") ||
-            !headers.includes("Business URL")
+            !headers.includes("Business URL") ||
+            !headers.includes("Business Location")
           ) {
             errors.push(
-              "CSV must contain 'Business Name' and 'Business URL' columns."
+              "CSV must contain 'Business Name', 'Business URL' and 'Business Location' columns."
             );
           }
         })
@@ -214,6 +219,7 @@ class ListingController {
             listings.push({
               businessName: data["Business Name"],
               businessURL: data["Business URL"] ? data["Business URL"] : "",
+              businessLocation: data["Business Location"],
               user: req.user._id,
             });
           } else {

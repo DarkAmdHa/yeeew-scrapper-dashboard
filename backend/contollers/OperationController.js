@@ -129,10 +129,14 @@ class OperationController {
   });
 
   createOperation = asyncHandler(async (req, res) => {
-    const { listings, type } = req.body.data;
+    const { listings, type, exportToYeeewTest } = req.body.data;
     if (!type || (type != "Scrape" && type != "Export")) {
       res.status(400);
       throw new Error("Operation Type required");
+    }
+    if (typeof exportToYeeewTest == undefined) {
+      res.status(400);
+      throw new Error("Please specify where to export");
     }
 
     try {
@@ -142,7 +146,8 @@ class OperationController {
         listings,
         totalListings: listings.length,
         status: "queued",
-        initiatedBy: req.user._id, // Assuming user authentication is implemented
+        initiatedBy: req.user._id,
+        exportToYeeewTest,
       });
 
       res.status(201).json(newOperation);
@@ -163,6 +168,9 @@ class OperationController {
           if (listing) {
             const data = {
               businessName: listing.businessName,
+              businessLocation: listing.businessLocation
+                ? listing.businessLocation
+                : "",
               businessURL: listing.businessURL ? listing.businessURL : "",
               _id: listing,
             };

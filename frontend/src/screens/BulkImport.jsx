@@ -29,7 +29,8 @@ function BulkImport() {
               const headers = results.data[0];
               if (
                 Object.keys(headers).includes("Business Name") &&
-                Object.keys(headers).includes("Business URL")
+                Object.keys(headers).includes("Business URL") &&
+                Object.keys(headers).includes("Business Location")
               ) {
                 setFile(newFile);
                 setFileName(newFile.name);
@@ -39,7 +40,7 @@ function BulkImport() {
                 setFileName("");
                 setIsValid(false);
                 toast.error(
-                  "CSV must contain 'Business Name' and 'Business URL' columns."
+                  "CSV must contain 'Business Name', 'Business URL' and 'Business Location' columns."
                 );
               }
             },

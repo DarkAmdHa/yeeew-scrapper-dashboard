@@ -9,6 +9,9 @@ export default function ConfirmationModal({
   heading,
   text,
   ctaText,
+  checkbox,
+  handleCheckboxChange,
+  checkboxText,
 }) {
   const [open, setOpen] = useState(true);
 
@@ -67,6 +70,24 @@ export default function ConfirmationModal({
                     <div className="mt-2">
                       <p className="text-sm text-gray-500">{text}</p>
                     </div>
+                    {checkboxText && (
+                      <div className="mt-2">
+                        <label
+                          htmlFor={`${checkboxText}`}
+                          className="text-sm text-gray-500 flex gap-2 items-center justify-center"
+                        >
+                          <input
+                            type="checkbox"
+                            value={checkbox}
+                            onChange={() =>
+                              handleCheckboxChange((prev) => !prev)
+                            }
+                            id={`${checkboxText}`}
+                          />
+                          {checkboxText}
+                        </label>
+                      </div>
+                    )}
                   </div>
                 </div>
                 <div className="mt-5 sm:ml-10 sm:mt-4 sm:flex sm:pl-4">

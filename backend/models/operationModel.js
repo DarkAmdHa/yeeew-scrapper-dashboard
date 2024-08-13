@@ -43,6 +43,10 @@ const OperationSchema = new mongoose.Schema(
       enum: ["queued", "running", "finished", "cancelled", "timed-out"],
       default: "queued",
     },
+    exportToYeeewTest: {
+      type: Boolean,
+      default: false,
+    },
     type: {
       type: String,
       required: true,

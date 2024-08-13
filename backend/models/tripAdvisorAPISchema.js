@@ -5,6 +5,7 @@ const reviewSchema = new mongoose.Schema({
   disclaimer: { type: String, default: "" },
   reviewText: { type: String, default: "" },
   reviewTitle: { type: String, default: "" },
+  publishedDate: { type: String, default: "" },
   userProfile: {
     displayName: { type: String, default: "" },
     contributionCount: { type: String, default: "" },

@@ -66,6 +66,9 @@ const ListingSchema = mongoose.Schema(
     businessURL: {
       type: String,
     },
+    businessLocation: {
+      type: String,
+    },
     tripType: [
       {
         type: String,

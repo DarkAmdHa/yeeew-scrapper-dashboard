@@ -3,11 +3,15 @@ import path from "path";
 import { mappedLocationStructure } from "./constants.js";
 import Operation from "../models/operationModel.js";
 import colors from "colors";
-import { amenitiesMasterList } from "./constants.js";
+import {
+  amenitiesMasterListDev,
+  amenitiesMasterListLive,
+} from "./constants.js";
 
 import fetch from "node-fetch";
 import FormData from "form-data";
 import Listing from "../models/listingModel.js";
+import { formatDate } from "../utils/functions.js";
 
 class Export {
   constructor(businessData, operationId) {
@@ -17,6 +21,27 @@ class Export {
     this.jobListingTypeTaxonomy = [193];
     this.createdPostID = "";
     this.featuredImageId = "";
+    this.exportToYeeewTest = false;
+
+    //Latitude and longitude:
+    // 1. If an API data is present, get it from that,
+    // 2. Else, use google data
+    // 3. Else use geolocation:
+    let latFromAPI = "";
+    let longFromAPI = "";
+    if (this.businessData.apiData) {
+      const findFirstCoordinatesData = Object.keys(
+        this.businessData.apiData
+      ).find((key) => this.businessData.apiData[key].data.coordinates);
+      if (findFirstCoordinatesData) {
+        latFromAPI =
+          this.businessData.apiData[findFirstCoordinatesData].data.coordinates
+            .lat;
+        longFromAPI =
+          this.businessData.apiData[findFirstCoordinatesData].data.coordinates
+            .long;
+      }
+    }
 
     this.exportObject = {
       title: businessData.businessName ? businessData.businessName : "",
@@ -26,10 +51,14 @@ class Export {
       job_listing_type: this.jobListingTypeTaxonomy,
       meta: {
         _job_location: businessData.address ? businessData.address : "",
-        geolocation_lat: businessData.latitude
+        geolocation_lat: latFromAPI
+          ? latFromAPI
+          : businessData.latitude
           ? businessData.latitude.toString()
           : "",
-        geolocation_long: businessData.longitude
+        geolocation_long: longFromAPI
+          ? longFromAPI
+          : businessData.longitude
           ? businessData.longitude.toString()
           : "",
         _application: businessData.email ? businessData.email : "",
@@ -71,19 +100,24 @@ class Export {
   }
 
   async uploadImageToWordPress(imageData, imageName) {
+    const yeeewApiUrl = this.exportToYeeewTest
+      ? process.env.YEEEW_DEV_REST_API_URL
+      : process.env.YEEEW_REST_API_URL;
+
     const form = new FormData();
     form.append("file", imageData, { filename: imageName });
 
-    const response = await fetch(
-      "https://yeewdev3.wpengine.com/wp-json/wp/v2/media",
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Basic ${process.env.YEEEW_REST_API_PASSWORD}`,
-        },
-        body: form,
-      }
-    );
+    const response = await fetch(yeeewApiUrl + "/wp-json/wp/v2/media", {
+      method: "POST",
+      headers: {
+        Authorization: `Basic ${
+          this.exportToYeeewTest
+            ? process.env.YEEEW_DEV_REST_API_PASSWORD
+            : process.env.YEEEW_REST_API_PASSWORD
+        }`,
+      },
+      body: form,
+    });
 
     const data = await response.json();
 
@@ -142,12 +176,14 @@ class Export {
 
   processBusinessData() {
     try {
-      this.accomodationTypeTaxonomies();
+      this.accommodationTypeTaxonomies();
       this.tripTypeTaxonomies();
       this.highlightsTaxonomies();
       this.exportFAQs();
       this.exportRooms();
       this.exportAmenities();
+      this.exportAffiliate();
+      this.exportTripAdvisorReviews();
       this.exportImagesToGallery();
       this.exportSurroundings();
       this.selectionLocationTaxonomies();
@@ -173,16 +209,19 @@ class Export {
       this.exportObject.featured_media = this.featuredImageId;
     }
     try {
-      const { data } = await axios.post(
-        "https://yeewdev3.wpengine.com/wp-json/wp/v2/job_listing",
-        this.exportObject,
-        {
-          headers: {
-            Authorization: `Basic ${process.env.YEEEW_REST_API_PASSWORD}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      let yeeewApiUrl = this.exportToYeeewTest
+        ? process.env.YEEEW_DEV_REST_API_URL + "/wp-json/wp/v2/job_listing"
+        : process.env.YEEEW_REST_API_URL + "/wp-json/wp/v2/job-listings";
+      const { data } = await axios.post(yeeewApiUrl, this.exportObject, {
+        headers: {
+          Authorization: `Basic ${
+            this.exportToYeeewTest
+              ? process.env.YEEEW_DEV_REST_API_PASSWORD
+              : process.env.YEEEW_REST_API_PASSWORD
+          }`,
+          "Content-Type": "application/json",
+        },
+      });
       this.createdPostID = data.id;
       console.log(`POST ID: ${data.id}`.green.inverse);
     } catch (error) {
@@ -205,12 +244,20 @@ class Export {
   }
   async addACFFieldsData() {
     try {
+      const yeeewApiUrl = this.exportToYeeewTest
+        ? process.env.YEEEW_DEV_REST_API_URL + "/wp-json/wp/v2/job_listing"
+        : process.env.YEEEW_REST_API_URL + "/wp-json/wp/v2/job-listings";
+
       await axios.post(
-        `https://yeewdev3.wpengine.com/wp-json/wp/v2/job_listing/${this.createdPostID}`,
+        yeeewApiUrl + `/${this.createdPostID}`,
         this.acfExportObject,
         {
           headers: {
-            Authorization: `Basic ${process.env.YEEEW_REST_API_PASSWORD}`,
+            Authorization: `Basic ${
+              this.exportToYeeewTest
+                ? process.env.YEEEW_DEV_REST_API_PASSWORD
+                : process.env.YEEEW_REST_API_PASSWORD
+            }`,
             "Content-Type": "application/json",
           },
         }
@@ -236,11 +283,11 @@ class Export {
     }
   }
 
-  accomodationTypeTaxonomies() {
+  accommodationTypeTaxonomies() {
     try {
-      if (!this.businessData.accomodationType) return;
+      if (!this.businessData.accommodationType) return;
       const accommodationTypeTaxonomies = [];
-      this.businessData.accomodationType.forEach((item) => {
+      this.businessData.accommodationType.forEach((item) => {
         if (item.toLowerCase().includes("boat"))
           accommodationTypeTaxonomies.push(54);
         if (item.toLowerCase().includes("cabin"))
@@ -250,9 +297,16 @@ class Export {
         if (item.toLowerCase().includes("rental campervan"))
           accommodationTypeTaxonomies.push(281);
         if (item.toLowerCase().includes("hostel"))
-          accommodationTypeTaxonomies.push(56);
+          accommodationTypeTaxonomies.push(this.exportToYeeewTest ? 56 : 3886);
         if (item.toLowerCase().includes("hotel"))
-          accommodationTypeTaxonomies.push(57);
+          accommodationTypeTaxonomies.push(this.exportToYeeewTest ? 57 : 3885);
+        if (
+          item.toLowerCase().includes("mobile tour") &&
+          !this.exportToYeeewTest
+        )
+          accommodationTypeTaxonomies.push(3888);
+        if (item.toLowerCase().includes("villa"))
+          accommodationTypeTaxonomies.push(3887);
       });
       if (accommodationTypeTaxonomies.length) {
         this.acfExportObject.acf["accommodation_type"] =
@@ -354,12 +408,63 @@ class Export {
     }
   }
 
+  exportTripAdvisorReviews() {
+    if (
+      !this.businessData.apiData ||
+      !this.businessData.apiData.tripadvisor ||
+      !this.businessData.apiData.tripadvisor.data.reviews
+    )
+      return;
+    try {
+      let repeaterReviews = this.businessData.apiData.tripadvisor.data.reviews;
+      if (repeaterReviews.length) {
+        this.acfExportObject.acf["reviews"] = repeaterReviews.map((item) => {
+          const obj = {
+            review_title: item.reviewTitle,
+            review_text: item.reviewText,
+            review_stars: item.reviewRating,
+            reviewer_name: item.userProfile.displayName,
+            approved: true,
+          };
+
+          if (item.publishedDate) {
+            const date = new Date(item.publishedDate);
+            if (date != "Invalid Date") {
+              const formattedDate = formatDate(date);
+              obj.time = formatDate(formattedDate);
+            }
+          }
+
+          return obj;
+        });
+      }
+    } catch (error) {
+      console.error(colors.red("Error exporting FAQs:" + error));
+
+      if (error.response) {
+        this.logError(
+          "Error exporting FAQs:" + error.response.data.message
+            ? error.response.data.message
+            : error.message
+            ? error.message
+            : error
+        );
+      } else {
+        this.logError("Error exporting FAQs:" + error.message);
+      }
+    }
+  }
   exportFAQs() {
     if (!this.businessData.faq) return;
     try {
       let repeaterFAQ = this.businessData.faq;
       if (repeaterFAQ.length) {
-        this.acfExportObject.acf["faq_section"] = repeaterFAQ;
+        this.acfExportObject.acf["faq_section"] = this.exportToYeeewTest
+          ? repeaterFAQ
+          : repeaterFAQ.map((fa) => ({
+              faq_question: fa.faq_question,
+              eaq_answer: fa.faq_answer,
+            }));
       }
     } catch (error) {
       console.error(colors.red("Error exporting FAQs:" + error));
@@ -409,21 +514,17 @@ class Export {
   getAmenitiesTaxonomyArray(amenities) {
     if (!amenities.length) return null;
 
-    const amenitiesTaxonomies = amenities.map((amenity) =>
-      amenitiesMasterList.find(
-        (item) => item.name.toLowerCase() === amenity.toLowerCase()
-      )
-    );
-  }
-
-  getAmenitiesTaxonomyArray(amenities) {
-    if (!amenities.length) return null;
-
-    const amenitiesTaxonomies = amenities.map((amenity) =>
-      amenitiesMasterList.find(
-        (item) => item.name.toLowerCase() === amenity.toLowerCase()
-      )
-    );
+    const amenitiesTaxonomies = this.exportToYeeewTest
+      ? amenities.map((amenity) =>
+          amenitiesMasterListDev.find(
+            (item) => item.name.toLowerCase() === amenity.toLowerCase()
+          )
+        )
+      : amenities.map((amenity) =>
+          amenitiesMasterListLive.find(
+            (item) => item.name.toLowerCase() === amenity.toLowerCase()
+          )
+        );
 
     return amenitiesTaxonomies
       .filter((item) => item && item.id)
@@ -440,6 +541,181 @@ class Export {
     }
   }
 
+  exportAffiliate() {
+    try {
+      const affiliates = [];
+      if (this.businessData.agoda.link) {
+        affiliates.push({
+          affiliate_name: 1867,
+          listing_url: this.businessData.agoda.link
+            ? this.businessData.agoda.link
+            : null,
+        });
+      }
+      if (this.businessData.perfectWave.link) {
+        affiliates.push({
+          affiliate_name: 1862,
+          listing_url: this.businessData.perfectWave.link
+            ? this.businessData.perfectWave.link
+            : null,
+        });
+      }
+      if (this.businessData.luex.link) {
+        affiliates.push({
+          affiliate_name: 1873,
+          listing_url: this.businessData.luex.link
+            ? this.businessData.luex.link
+            : null,
+        });
+      }
+      if (this.businessData.waterways.link) {
+        affiliates.push({
+          affiliate_name: 1864,
+          listing_url: this.businessData.waterways.link
+            ? this.businessData.waterways.link
+            : null,
+        });
+      }
+      if (this.businessData.worldSurfaris.link) {
+        affiliates.push({
+          affiliate_name: 1869,
+          listing_url: this.businessData.worldSurfaris.link
+            ? this.businessData.worldSurfaris.link
+            : null,
+        });
+      }
+      if (this.businessData.atollTravel.link) {
+        affiliates.push({
+          affiliate_name: 1874,
+          listing_url: this.businessData.atollTravel.link
+            ? this.businessData.atollTravel.link
+            : null,
+        });
+      }
+      if (this.businessData.surfHolidays.link) {
+        affiliates.push({
+          affiliate_name: 1865,
+          listing_url: this.businessData.surfHolidays.link
+            ? this.businessData.surfHolidays.link
+            : null,
+        });
+      }
+      if (this.businessData.surfline.link) {
+        affiliates.push({
+          affiliate_name: 3869,
+          listing_url: this.businessData.surfline.link
+            ? this.businessData.surfline.link
+            : null,
+        });
+      }
+      if (this.businessData.lushPalm.link) {
+        affiliates.push({
+          affiliate_name: 3870,
+          listing_url: this.businessData.lushPalm.link
+            ? this.businessData.lushPalm.link
+            : null,
+        });
+      }
+      if (this.businessData.thermal.link) {
+        affiliates.push({
+          affiliate_name: 3871,
+          listing_url: this.businessData.thermal.link
+            ? this.businessData.thermal.link
+            : null,
+        });
+      }
+      if (this.businessData.bookSurfCamps.link) {
+        affiliates.push({
+          affiliate_name: 3872,
+          listing_url: this.businessData.bookSurfCamps.link
+            ? this.businessData.bookSurfCamps.link
+            : null,
+        });
+      }
+      if (this.businessData.nomadSurfers.link) {
+        affiliates.push({
+          affiliate_name: 3873,
+          listing_url: this.businessData.nomadSurfers.link
+            ? this.businessData.nomadSurfers.link
+            : null,
+        });
+      }
+      if (this.businessData.stokedSurfAdventures.link) {
+        affiliates.push({
+          affiliate_name: 3874,
+          listing_url: this.businessData.stokedSurfAdventures.link
+            ? this.businessData.stokedSurfAdventures.link
+            : null,
+        });
+      }
+      if (this.businessData.soulSurfTravel.link) {
+        affiliates.push({
+          affiliate_name: 3875,
+          listing_url: this.businessData.soulSurfTravel.link
+            ? this.businessData.soulSurfTravel.link
+            : null,
+        });
+      }
+      if (this.businessData.surfersHype.link) {
+        affiliates.push({
+          affiliate_name: 3877,
+          listing_url: this.businessData.surfersHype.link
+            ? this.businessData.surfersHype.link
+            : null,
+        });
+      }
+
+      if (this.businessData.apiData) {
+        if (this.businessData.apiData.tripadvisor) {
+          affiliates.push({
+            affiliate_name: 3878,
+            api_id: "https://tripadvisor-com1.p.rapidapi.com",
+            affiliate_id: this.businessData.apiData.tripadvisor.id,
+          });
+        }
+        if (this.businessData.apiData.hotels) {
+          affiliates.push({
+            affiliate_name: 1875,
+            api_id: "https://hotels-com-provider.p.rapidapi.com",
+            affiliate_id: this.businessData.apiData.hotels.id,
+          });
+        }
+        if (this.businessData.apiData.priceline) {
+          affiliates.push({
+            affiliate_name: 3883,
+            api_id: "https://priceline-com-provider.p.rapidapi.com",
+            affiliate_id: this.businessData.apiData.priceline.id,
+          });
+        }
+        if (this.businessData.apiData.booking) {
+          affiliates.push({
+            affiliate_name: 1866,
+            api_id: "https://booking-com15.p.rapidapi.com",
+            affiliate_id: this.businessData.apiData.booking.id,
+          });
+        }
+      }
+
+      if (affiliates.length) {
+        this.acfExportObject.acf["listing_pricing_option"] = "affiliate_prices";
+        this.acfExportObject.acf["affiliate_price_box"] = affiliates;
+      }
+    } catch (error) {
+      console.error(colors.red("Error exporting affiliates:" + error));
+
+      if (error.response) {
+        this.logError(
+          "Error exporting affiliates:" + error.response.data.message
+            ? error.response.data.message
+            : error.message
+            ? error.message
+            : error
+        );
+      } else {
+        this.logError("Error exporting affiliates:" + error.message);
+      }
+    }
+  }
   exportAmenities() {
     if (!this.businessData.propertyAmenitiesFromBooking) return;
 
@@ -618,9 +894,12 @@ class Export {
   async updateOperationStatus() {
     try {
       const operation = await Operation.findById(this.operationId);
+      if (typeof operation.exportToYeeewTest != "undefined") {
+        this.exportToYeeewTest = operation.exportToYeeewTest;
+      }
 
-      //If operation has been cancelled, no need to proceed
       if (operation.status === "cancelled") {
+        //If operation has been cancelled, no need to proceed
         this.operationStatus = "cancelled";
         operation.finishedAt = new Date();
       } else if (operation.status == "queued") {
@@ -648,7 +927,13 @@ class Export {
 
   async updateListing() {
     try {
-      const exportedYeeewLink = `https://yeewdev3.wpengine.com/wp-admin/post.php?post=${this.createdPostID}&action=edit`;
+      const yeeewApiUrl = this.exportToYeeewTest
+        ? process.env.YEEEW_DEV_REST_API_URL
+        : process.env.YEEEW_REST_API_URL;
+
+      const exportedYeeewLink =
+        yeeewApiUrl +
+        `/wp-admin/post.php?post=${this.createdPostID}&action=edit`;
       const listing = await Listing.findByIdAndUpdate(
         this.businessData._id,
         {

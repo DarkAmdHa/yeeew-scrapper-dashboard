@@ -58,6 +58,8 @@ class TripAdvisorFetcher {
           disclaimer: (review.disclaimer && review.disclaimer.string) ?? "",
           reviewText: (review.htmlText && review.htmlText.htmlString) ?? "",
           reviewTitle: (review.htmlTitle && review.htmlTitle.htmlString) ?? "",
+          publishedDate:
+            (review.publishedDate && review.publishedDate.string) ?? "",
           userProfile: {
             displayName:
               (review.userProfile && review.userProfile.displayName) ?? "",
