@@ -187,7 +187,7 @@ class OperationController {
       }
     } catch (error) {
       res.status(400);
-      throw new Error(error.message);
+      throw error;
     }
   });
 }
