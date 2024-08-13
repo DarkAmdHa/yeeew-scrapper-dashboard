@@ -9,8 +9,7 @@ export const errorHandler = (err, req, res, next) => {
   //for instance, if the error was manually thrown without setting a res.status:
   const errorCode = res.statusCode === 200 ? 500 : res.statusCode;
 
-  res.status(errorCode);
-  res.json({
+  res.status(errorCode).json({
     message: err.message,
     stackTrace: process.env.NODE_ENV === "production" ? null : err.stack,
   });
