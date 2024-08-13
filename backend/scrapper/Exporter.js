@@ -29,21 +29,21 @@ class Export {
     // 3. Else use geolocation:
     let latFromAPI = "";
     let longFromAPI = "";
-    if (this.businessData.apiData) {
+    if (this.businessData._doc.apiData) {
       const findFirstCoordinatesData = Object.keys(
-        this.businessData.apiData
+        this.businessData._doc.apiData
       ).find(
         (key) =>
-          this.businessData.apiData[key].data &&
-          this.businessData.apiData[key].data.coordinates
+          this.businessData._doc.apiData[key].data &&
+          this.businessData._doc.apiData[key].data.coordinates
       );
       if (findFirstCoordinatesData) {
         latFromAPI =
-          this.businessData.apiData[findFirstCoordinatesData].data.coordinates
-            .lat;
+          this.businessData._doc.apiData[findFirstCoordinatesData].data
+            .coordinates.lat;
         longFromAPI =
-          this.businessData.apiData[findFirstCoordinatesData].data.coordinates
-            .long;
+          this.businessData._doc.apiData[findFirstCoordinatesData].data
+            .coordinates.long;
       }
     }
 
