@@ -116,10 +116,11 @@ class Scrapper {
   async scrapeFromBookingAPI() {
     try {
       const resortFetcher = new BookingAPIFetcher(
-        this.businessData.businessName +
-          (this.businessData.businessLocation
-            ? " " + this.businessData.businessLocation
-            : "")
+        this.businessData.businessName
+        //  +
+        //   (this.businessData.businessLocation
+        //     ? " " + this.businessData.businessLocation
+        //     : "")
       );
       const apiResponse = await resortFetcher.init();
       console.log(apiResponse);
@@ -141,10 +142,11 @@ class Scrapper {
   async scrapeFromPricelineAPI() {
     try {
       const resortFetcher = new PricelineAPIFetcher(
-        this.businessData.businessName +
-          (this.businessData.businessLocation
-            ? " " + this.businessData.businessLocation
-            : "")
+        this.businessData.businessName
+        // +
+        //   (this.businessData.businessLocation
+        //     ? " " + this.businessData.businessLocation
+        //     : "")
       );
       const apiResponse = await resortFetcher.init();
 
@@ -166,10 +168,11 @@ class Scrapper {
   async scrapeFromHotelsAPI() {
     try {
       const resortFetcher = new HotelsAPIFetcher(
-        this.businessData.businessName +
-          (this.businessData.businessLocation
-            ? " " + this.businessData.businessLocation
-            : "")
+        this.businessData.businessName
+        // +
+        //   (this.businessData.businessLocation
+        //     ? " " + this.businessData.businessLocation
+        //     : "")
       );
       const apiResponse = await resortFetcher.init();
 
@@ -190,10 +193,11 @@ class Scrapper {
   async scrapeFromTripAdvisor() {
     try {
       const resortFetcher = new TripAdvisorFetcher(
-        this.businessData.businessName +
-          (this.businessData.businessLocation
-            ? " " + this.businessData.businessLocation
-            : "")
+        this.businessData.businessName
+        // +
+        //   (this.businessData.businessLocation
+        //     ? " " + this.businessData.businessLocation
+        //     : "")
       );
       const apiResponse = await resortFetcher.init();
 

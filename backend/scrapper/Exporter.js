@@ -427,7 +427,14 @@ class Export {
             review_title: item.reviewTitle,
             review_text: item.reviewText,
             review_stars: item.reviewRating,
-            reviewer_name: item.userProfile.displayName,
+            reviewer_name:
+              item.userProfile && item.userProfile.displayName
+                ? item.userProfile.displayName
+                : "",
+            reviewers_image:
+              item.userProfile && item.userProfile.avatar
+                ? item.userProfile.avatar
+                : "",
             approved: true,
           };
 
