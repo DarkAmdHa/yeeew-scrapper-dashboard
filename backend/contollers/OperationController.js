@@ -190,6 +190,35 @@ class OperationController {
       throw error;
     }
   });
+  locateBusinesses = asyncHandler(async (req, res) => {
+    const { listings } = req.body;
+
+    if (!listings || !listings.length) {
+      res.status(400);
+      throw new Error("Please specify businesses to be located.");
+    }
+
+    // Create new operation in the database
+    const scrapper = new Scrapper();
+    const errors = [];
+    for (let i = 0; i < listings.length; i++) {
+      const listing = await Listing.findById(listings[i]);
+
+      try {
+        await scrapper.locateListing(listings[i], listing);
+      } catch (error) {
+        console.log("Something went wrong while locating business.", error);
+        errors.push({
+          name: listing.businessName,
+          error,
+        });
+      }
+    }
+    res.status(201).json({
+      message: "Operation Finished",
+      errors,
+    });
+  });
 }
 
 export default new OperationController();

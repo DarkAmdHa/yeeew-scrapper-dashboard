@@ -69,6 +69,9 @@ const ListingSchema = mongoose.Schema(
     businessLocation: {
       type: String,
     },
+    country: {
+      type: String,
+    },
     tripType: [
       {
         type: String,
@@ -134,6 +137,9 @@ const ListingSchema = mongoose.Schema(
       summary: {
         type: String,
       },
+      content: {
+        type: String,
+      },
       link: {
         type: String,
       },
@@ -143,6 +149,9 @@ const ListingSchema = mongoose.Schema(
         type: String,
       },
       summary: {
+        type: String,
+      },
+      content: {
         type: String,
       },
       link: {
@@ -156,6 +165,9 @@ const ListingSchema = mongoose.Schema(
       summary: {
         type: String,
       },
+      content: {
+        type: String,
+      },
       link: {
         type: String,
       },
@@ -165,6 +177,9 @@ const ListingSchema = mongoose.Schema(
         type: String,
       },
       summary: {
+        type: String,
+      },
+      content: {
         type: String,
       },
       link: {
@@ -178,6 +193,9 @@ const ListingSchema = mongoose.Schema(
       summary: {
         type: String,
       },
+      content: {
+        type: String,
+      },
       link: {
         type: String,
       },
@@ -187,6 +205,9 @@ const ListingSchema = mongoose.Schema(
         type: String,
       },
       summary: {
+        type: String,
+      },
+      content: {
         type: String,
       },
       link: {
@@ -200,6 +221,9 @@ const ListingSchema = mongoose.Schema(
       summary: {
         type: String,
       },
+      content: {
+        type: String,
+      },
       link: {
         type: String,
       },
@@ -209,6 +233,9 @@ const ListingSchema = mongoose.Schema(
         type: String,
       },
       summary: {
+        type: String,
+      },
+      content: {
         type: String,
       },
       link: {
@@ -222,6 +249,9 @@ const ListingSchema = mongoose.Schema(
       summary: {
         type: String,
       },
+      content: {
+        type: String,
+      },
       link: {
         type: String,
       },
@@ -231,6 +261,9 @@ const ListingSchema = mongoose.Schema(
         type: String,
       },
       summary: {
+        type: String,
+      },
+      content: {
         type: String,
       },
       link: {
@@ -244,6 +277,9 @@ const ListingSchema = mongoose.Schema(
       summary: {
         type: String,
       },
+      content: {
+        type: String,
+      },
       link: {
         type: String,
       },
@@ -253,6 +289,9 @@ const ListingSchema = mongoose.Schema(
         type: String,
       },
       summary: {
+        type: String,
+      },
+      content: {
         type: String,
       },
       link: {
@@ -266,6 +305,9 @@ const ListingSchema = mongoose.Schema(
       summary: {
         type: String,
       },
+      content: {
+        type: String,
+      },
       link: {
         type: String,
       },
@@ -277,6 +319,9 @@ const ListingSchema = mongoose.Schema(
       summary: {
         type: String,
       },
+      content: {
+        type: String,
+      },
       link: {
         type: String,
       },
@@ -286,6 +331,9 @@ const ListingSchema = mongoose.Schema(
         type: String,
       },
       summary: {
+        type: String,
+      },
+      content: {
         type: String,
       },
       link: {
@@ -310,6 +358,7 @@ const ListingSchema = mongoose.Schema(
       summary: {
         type: String,
       },
+
       link: {
         type: String,
       },

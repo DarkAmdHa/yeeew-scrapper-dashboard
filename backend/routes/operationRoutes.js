@@ -9,6 +9,11 @@ const router = express.Router();
 // @access  Private
 router.route("/").post(protect, OperationController.createOperation);
 
+// @desc    Locate Businesses
+// @route   POST /api/operations/locate
+// @access  Private
+router.route("/locate").post(protect, OperationController.locateBusinesses);
+
 // @desc    Fetch Paginated Operations
 // @route   GET /api/operations
 // @access  Private

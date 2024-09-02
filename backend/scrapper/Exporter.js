@@ -421,6 +421,14 @@ class Export {
       return;
     try {
       let repeaterReviews = this.businessData.apiData.tripadvisor.data.reviews;
+      if (this.businessData.apiData.tripadvisor.data.totalReviews) {
+        this.acfExportObject.acf["tripadvisor_review_count"] =
+          this.businessData.apiData.tripadvisor.data.totalReviews;
+      }
+      if (this.businessData.apiData.tripadvisor.data.rating) {
+        this.acfExportObject.acf["tripadvisor_review_rating"] =
+          this.businessData.apiData.tripadvisor.data.rating;
+      }
       if (repeaterReviews.length) {
         this.acfExportObject.acf["reviews"] = repeaterReviews.map((item) => {
           const obj = {
@@ -438,13 +446,20 @@ class Export {
             approved: true,
           };
 
-          // if (item.publishedDate) {
-          //   const date = new Date(item.publishedDate);
-          //   if (date != "Invalid Date") {
-          //     const formattedDate = formatDate(date);
-          //     obj.time = formatDate(formattedDate);
-          //   }
-          // }
+          if (item.publishedDate) {
+            const dateString = item.publishedDate.split("Written ")[1];
+            try {
+              const date = new Date(dateString);
+              if (date && date != "Invalid Date") {
+                obj.time = formatDate(date);
+              }
+            } catch (error) {
+              console.log(
+                "Something went wrong while exporting review data",
+                error
+              );
+            }
+          }
 
           return obj;
         });

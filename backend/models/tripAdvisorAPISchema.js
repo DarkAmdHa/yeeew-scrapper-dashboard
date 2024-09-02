@@ -31,6 +31,8 @@ const tripAdvisorAPIDataSchema = new mongoose.Schema(
     id: { type: String, required: true, unique: true },
     data: {
       reviews: [reviewSchema],
+      rating: Number,
+      totalReviews: Number,
     },
   },
   { _id: false }

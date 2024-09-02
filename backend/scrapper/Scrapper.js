@@ -14,7 +14,7 @@ import BookingAPIFetcher from "./BookingAPIFetcher.js";
 import PricelineAPIFetcher from "./PricelineAPIFetcher.js";
 import HotelsAPIFetcher from "./HotelsAPIFetcher.js";
 import TripAdvisorFetcher from "./TripAdvisorFetcher.js";
-import { highlightsBlueprint } from "./constants.js";
+import { highlightsBlueprint, promptToScrapeContent } from "./constants.js";
 
 class Scrapper {
   constructor(businessData, operationId) {
@@ -84,6 +84,55 @@ class Scrapper {
         this.scrapedData
       );
       this.scrapedData = await this.locateBusiness(this.scrapedData);
+    }
+  }
+
+  async locateListing(listingId, providedListing = undefined) {
+    //Check using geocode
+    //Try one of the APIs
+
+    //Scrape google manually, look for data on one of the main sites
+    try {
+      let listingCountry;
+      const listing = providedListing
+        ? providedListing
+        : await Listing.findById(listingId);
+      if (!listing) {
+        throw new Error("Listing not found");
+      }
+      const locations = await this.fetchGeocodeData(
+        listing.businessName + listing.businessLocation ?? ""
+      );
+
+      if (!locations || !locations.results || !locations.results.length)
+        throw new Error("No location found from geocode data");
+      const item = locations.results[0];
+      const countryNameItem = item.address_components.find((item) =>
+        item.types.includes("country")
+      );
+      const countryName = countryNameItem.long_name;
+      if (countryName) {
+        listing.country = countryName;
+        await listing.save();
+      } else {
+        throw new Error("Country not found in geocode data");
+      }
+
+      // //Try google:
+      // const prompt = `Use the following Google.com code to look for ${businessName}'s address, namely the country in which it is located. If found, return in JSON, an object with the key 'country' containing the country name. Otherwise look for the business' website on the google result and return it as {businessLink: ''}. If no site specific to the business could be found, look for a booking platform like Booking.com, Agoda etc where this data can be found.`;
+      // const link = `https://www.google.com/search?q=${encodeURIComponent(
+      //   businessName
+      // )}`;
+      // const listingData = await this.communicateWithOpenAi(link, prompt);
+
+      // if (listingData.country) {
+      //   //Save country
+      // } else {
+      //   //Scrape the website for the country
+      // }
+    } catch (error) {
+      console.error("Error fetching geocode data:", error);
+      throw error;
     }
   }
 
@@ -294,26 +343,6 @@ class Scrapper {
       let scrapedImagesArray = [];
       var dataToProcess = [
         {
-          data: data.platformSummaries["bookingData"],
-          name: "booking",
-        },
-        {
-          data: data.platformSummaries["tripData"],
-          name: "trip",
-        },
-        {
-          data: data.platformSummaries["expediaData"],
-          name: "expedia",
-        },
-        {
-          data: data.platformSummaries["agodaData"],
-          name: "agoda",
-        },
-        {
-          data: data.platformSummaries["trivagoData"],
-          name: "trivago",
-        },
-        {
           data: data.platformSummaries["perfectWaveData"],
           name: "perfectWave",
         },
@@ -373,6 +402,27 @@ class Scrapper {
           data: data.platformSummaries["surfersHypeData"],
           name: "surfersHype",
         },
+        {
+          data: data.platformSummaries["trivagoData"],
+          name: "trivago",
+        },
+        {
+          data: data.platformSummaries["agodaData"],
+          name: "agoda",
+        },
+        {
+          data: data.platformSummaries["expediaData"],
+          name: "expedia",
+        },
+
+        {
+          data: data.platformSummaries["tripData"],
+          name: "trip",
+        },
+        {
+          data: data.platformSummaries["bookingData"],
+          name: "booking",
+        },
       ];
 
       //Images from main site:
@@ -387,6 +437,7 @@ class Scrapper {
             highlights: item.data.highlights ? item.data.highlights : "",
             summary: item.data.textContent ? item.data.textContent : "",
             link: item.data.link ? item.data.link : "",
+            content: item.data.content ? item.data.content : "",
           };
           if (item.data.images) {
             scrapedImagesArray.push(...item.data.images);
@@ -662,7 +713,7 @@ class Scrapper {
 
     await page.setViewport({ width: 1000, height: 500 });
 
-    await page.goto(link);
+    await page.goto(link, { timeout: 90000 });
 
     if (process.env.NODE_ENV === "development") scrapingImages = false;
 
@@ -1316,38 +1367,86 @@ class Scrapper {
     businessData.data.platformSummaries = {};
 
     const links = {
-      booking: { platformURL: "Booking.com", listingUrl: "" },
-      agoda: { platformURL: "agoda.com", listingUrl: "" },
-      trip: { platformURL: "Trip.com", listingUrl: "" },
-      expedia: { platformURL: "expedia.com", listingUrl: "" },
-      trivago: { platformURL: "Trivago.com", listingUrl: "" },
-      perfectWave: { platformURL: "perfectwavetravel.com", listingUrl: "" },
-      luex: { platformURL: "luex.com", listingUrl: "" },
-      waterwaysSurf: { platformURL: "waterwaystravel.com", listingUrl: "" },
-      worldSafaris: { platformURL: "worldsurfaris.com", listingUrl: "" },
-      awave: { platformURL: "awave.com.au", listingUrl: "" },
-      atoll: { platformURL: "atolltravel.com", listingUrl: "" },
-      surfHolidays: { platformURL: "surfholidays.com", listingUrl: "" },
-      surfline: { platformURL: "surfline.com", listingUrl: "" },
+      perfectWave: {
+        platformURL: "perfectwavetravel.com",
+        listingUrl: "",
+        summarize: false,
+      },
+      luex: { platformURL: "luex.com", listingUrl: "", summarize: false },
+      waterwaysSurf: {
+        platformURL: "waterwaystravel.com",
+        listingUrl: "",
+        summarize: false,
+      },
+      worldSafaris: {
+        platformURL: "worldsurfaris.com",
+        listingUrl: "",
+        summarize: false,
+      },
+      awave: { platformURL: "awave.com.au", listingUrl: "", summarize: false },
+      atoll: {
+        platformURL: "atolltravel.com",
+        listingUrl: "",
+        summarize: false,
+      },
+      surfHolidays: {
+        platformURL: "surfholidays.com",
+        listingUrl: "",
+        summarize: false,
+      },
+      surfline: {
+        platformURL: "surfline.com",
+        listingUrl: "",
+        summarize: false,
+      },
       lushPalm: { platformURL: "", listingUrl: "lushpalm.com" },
-      thermalTravel: { platformURL: "thermal.travel", listingUrl: "" },
-      bookSurfCamps: { platformURL: "booksurfcamps.com", listingUrl: "" },
-      nomadSurfers: { platformURL: "nomadsurfers.com", listingUrl: "" },
+      thermalTravel: {
+        platformURL: "thermal.travel",
+        listingUrl: "",
+        summarize: false,
+      },
+      bookSurfCamps: {
+        platformURL: "booksurfcamps.com",
+        listingUrl: "",
+        summarize: false,
+      },
+      nomadSurfers: {
+        platformURL: "nomadsurfers.com",
+        listingUrl: "",
+        summarize: false,
+      },
       stokedSurfAdventrues: {
         platformURL: "stokedsurfadventures.com",
         listingUrl: "",
+        summarize: false,
       },
-      soulSurfTravel: { platformURL: "soulsurftravel.com.au", listingUrl: "" },
-      surfersHype: { platformURL: "surfershype.com", listingUrl: "" },
+      soulSurfTravel: {
+        platformURL: "soulsurftravel.com.au",
+        listingUrl: "",
+        summarize: false,
+      },
+      surfersHype: {
+        platformURL: "surfershype.com",
+        listingUrl: "",
+        summarize: false,
+      },
+      booking: { platformURL: "Booking.com", listingUrl: "", summarize: true },
+      agoda: { platformURL: "agoda.com", listingUrl: "", summarize: true },
+      trip: { platformURL: "Trip.com", listingUrl: "", summarize: true },
+      expedia: { platformURL: "expedia.com", listingUrl: "", summarize: true },
+      trivago: { platformURL: "Trivago.com", listingUrl: "", summarize: true },
     };
 
     const linksArr = Object.keys(links);
-
+    const MAX_NON_SUMMARY = 3;
+    let curNonSummary = 0;
     const loopLength =
-      process.env.NODE_ENV === "development" ? 1 : linksArr.length;
+      process.env.NODE_ENV === "development" ? 5 : linksArr.length;
+    // const loopLength = 5;
     for (var i = 0; i < loopLength; i++) {
       const platformName = linksArr[i];
       const platformURL = links[linksArr[i]].platformURL;
+      const summarize = links[linksArr[i]].summarize;
       try {
         const listingUrlData = await this.findListingOnGoogle(
           businessName,
@@ -1357,6 +1456,13 @@ class Scrapper {
 
         if (listingUrlData.data) {
           //Scrape Pages from platforms
+          if (!summarize) {
+            curNonSummary++;
+          }
+
+          let contentToBeSummarized =
+            !summarize && curNonSummary <= MAX_NON_SUMMARY;
+
           links[linksArr[i]].listingUrl = listingUrlData.data;
           const result = await this.puppeteerLoadFetch(
             listingUrlData.data,
@@ -1376,7 +1482,8 @@ class Scrapper {
             links[linksArr[i]].platformURL,
             businessName,
             result.sanitizedData,
-            prompts
+            prompts,
+            contentToBeSummarized ? promptToScrapeContent : ""
           );
 
           if (listingDataFromOpenAi.error) {
@@ -1385,6 +1492,9 @@ class Scrapper {
 
           businessData.data.platformSummaries[`${platformName}Data`] = {
             link: listingUrlData.data,
+            content: listingDataFromOpenAi.content
+              ? listingDataFromOpenAi.content
+              : "",
             textContent: listingDataFromOpenAi.summary
               ? listingDataFromOpenAi.summary
               : result.sanitizedData,

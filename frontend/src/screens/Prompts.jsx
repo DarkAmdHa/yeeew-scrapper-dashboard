@@ -65,6 +65,28 @@ function Prompts() {
     }
   };
 
+  const handleVersionChange = async (e, prompt) => {
+    const version = e.target.value;
+    setSaving(true);
+    try {
+      await axios.put(
+        `/api/prompts/${prompts._id}?prompt=${prompt}&version=${version}`,
+        prompts,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      ); // Adjust the endpoint as necessary
+      toast.success("Prompts saved successfully!");
+    } catch (error) {
+      console.error("Error saving prompts:", error);
+      toast.error("Failed to save prompts.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <div className="max-h-[90vh] overflow-auto">
       {loading && <SpinnerOverlay width="w-12" height="h-12" />}
@@ -98,6 +120,25 @@ function Prompts() {
                   Admin Prompt for the scrapper
                 </label>
                 <div className="mt-2">
+                  <div className="flex gap-2 mb-2">
+                    <p className="text-white text-sm">Version</p>
+                    {prompts.adminPrompt && (
+                      <select
+                        className="cursor-pointer"
+                        onChange={handleVersionChange.bind(this, "adminPrompt")}
+                      >
+                        {prompts.adminPrompt.versions ? (
+                          prompts.adminPrompt.versions.map((version, index) => (
+                            <option value={version} key={`version-${index}`}>
+                              {version}
+                            </option>
+                          ))
+                        ) : (
+                          <option value="1">1</option>
+                        )}
+                      </select>
+                    )}
+                  </div>
                   <textarea
                     rows={6}
                     id="adminPrompt"

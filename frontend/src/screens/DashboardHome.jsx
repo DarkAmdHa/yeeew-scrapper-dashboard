@@ -263,6 +263,51 @@ export default function DashboardHome() {
     setConfirm3(true);
   };
 
+  const handleLocateBusinesses = async () => {
+    setLoading(true);
+    try {
+      const { data } = await axios.post(
+        `/api/operations/locate`,
+        {
+          listings: selectedItems,
+        },
+
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (data.errors && data.errors.length) {
+        console.log(data.errors);
+        if (data.errors.length == listings.length) {
+          toast.error("None of the listings were able to be located");
+        } else {
+          toast.error(
+            "The following listings could not be located: " +
+              data.errors.map((list) => list.name).join(",")
+          );
+        }
+      } else {
+        toast.success("All listings located");
+      }
+    } catch (error) {
+      if (error.response && error.response.status == "401") {
+        toast.info("Please login again as your token has expired");
+        setUser(null);
+        setToken(null);
+        navigate("/login");
+      } else {
+        toast.error("Failed to locate businesses");
+      }
+    } finally {
+      setSelectedItems([]);
+
+      setLoading(false);
+    }
+  };
+
   const exportToYeeew = () => {
     console.log("Running");
     setConfirm2(true);
@@ -296,6 +341,10 @@ export default function DashboardHome() {
     {
       name: "Bali",
       value: "/bali",
+    },
+    {
+      name: "Fiji",
+      value: "/fiji",
     },
     {
       name: "Indonesia",
@@ -730,6 +779,16 @@ export default function DashboardHome() {
                     }}
                   />
                   <p> Business Name</p>
+                  {selectedItems.length ? (
+                    <button
+                      className="text-blue-500 text-xs ml-2 hover:underline cursor-pointer"
+                      onClick={handleLocateBusinesses}
+                    >
+                      Locate Businesses
+                    </button>
+                  ) : (
+                    ""
+                  )}
                 </th>
                 <th
                   scope="col"

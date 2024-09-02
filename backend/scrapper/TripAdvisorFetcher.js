@@ -4,6 +4,8 @@ class TripAdvisorFetcher {
     this.businessName = businessName;
     this.entityId = "";
     this.reviews = [];
+    this.totalReviews = 0;
+    this.rating = 0;
   }
 
   async init() {
@@ -13,6 +15,8 @@ class TripAdvisorFetcher {
         id: this.entityId,
         data: {
           reviews: this.reviews,
+          totalReviews: this.totalReviews,
+          rating: this.rating,
         },
       };
   }
@@ -53,6 +57,23 @@ class TripAdvisorFetcher {
       const { data } = await axios.request(options);
 
       if (data.data.reviews && data.data.reviews.length) {
+        this.totalReviews =
+          data.data.meta && data.data.meta.totalRecords
+            ? data.data.meta.totalRecords
+            : data.data.reviews.length;
+
+        const reviewHeading =
+          data.data.sections &&
+          data.data.sections.find(
+            (section) =>
+              section.__typename == "AppPresentation_ReviewListHeaderV2"
+          );
+
+        if (reviewHeading) {
+          this.rating =
+            reviewHeading.reviewsDetailsV2 &&
+            reviewHeading.reviewsDetailsV2.rating;
+        }
         this.reviews = data.data.reviews.map((review) => ({
           reviewRating: review.reviewRating ?? "",
           disclaimer: (review.disclaimer && review.disclaimer.string) ?? "",

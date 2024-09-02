@@ -9,6 +9,9 @@ import csvParser from "csv-parser";
 import fs from "fs";
 import stream from "stream";
 
+import Scrapper from "../scrapper/Scrapper.js";
+const scrapper = new Scrapper();
+
 const upload = multer({
   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
   fileFilter(req, file, cb) {
@@ -53,7 +56,13 @@ class ListingController {
 
     const listing = await new this.model(listingObject);
 
-    listing.save();
+    await listing.save();
+
+    try {
+      await scrapper.locateListing(listing._id);
+    } catch (error) {
+      console.log("Business could not be located: ", error);
+    }
 
     res.json(listing);
   });
@@ -144,7 +153,12 @@ class ListingController {
 
     if (regionFilters.length > 0) {
       filters.$or = regionFilters.map((region) => ({
-        customSlug: new RegExp(region, "i"),
+        $or: [
+          {
+            customSlug: new RegExp(region, "i"),
+          },
+          { country: new RegExp(region.slice(1), "i") },
+        ],
       }));
     }
 
@@ -234,6 +248,16 @@ class ListingController {
 
           try {
             const savedListings = await this.model.insertMany(listings);
+
+            for (let i = 0; i < savedListings.length; i++) {
+              try {
+                await scrapper.locateListing(savedListings[i]._id);
+              } catch (error) {
+                console.log(
+                  "Business could not be located: " + error + savedListings[i]
+                );
+              }
+            }
             res
               .status(201)
               .json({ message: "Businesses Added", listings: savedListings });

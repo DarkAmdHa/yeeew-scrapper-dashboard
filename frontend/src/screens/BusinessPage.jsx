@@ -19,6 +19,7 @@ import TripAdvisorAPIData from "../components/TripAdvisorAPIData";
 const initialState = {
   businessName: "",
   businessURL: "",
+  country: "",
   tripType: [],
   highlightsAndTopAmenities: [],
   accommodationType: [],
@@ -195,6 +196,18 @@ export default function BusinessPage() {
                   </div>
                 </div>
               </div>
+              {changeableListing.country && (
+                <div className="sm:col-span-4">
+                  <p className="block text-sm font-medium leading-6 text-white">
+                    Country
+                  </p>
+                  <div className="mt-0">
+                    <p className="text-white font-semibold">
+                      {changeableListing.country}
+                    </p>
+                  </div>  
+                </div>
+              )}
             </div>
           </div>
           <div className="flex items-center justify-end gap-x-6 border-t border-gray-500/10 px-4 py-4 sm:px-8">
