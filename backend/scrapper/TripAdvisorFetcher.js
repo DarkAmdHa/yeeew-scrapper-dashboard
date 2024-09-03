@@ -58,8 +58,8 @@ class TripAdvisorFetcher {
 
       if (data.data.reviews && data.data.reviews.length) {
         this.totalReviews =
-          data.data.meta && data.data.meta.totalRecords
-            ? data.data.meta.totalRecords
+          data.meta && data.meta.totalRecords
+            ? data.meta.totalRecords
             : data.data.reviews.length;
 
         const reviewHeading =
