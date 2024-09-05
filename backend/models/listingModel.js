@@ -134,6 +134,15 @@ const ListingSchema = mongoose.Schema(
       highlights: {
         type: String,
       },
+      minimum_price: {
+        type: String,
+      },
+      nights: {
+        type: String,
+      },
+      currency: {
+        type: String,
+      },
       summary: {
         type: String,
       },
@@ -146,6 +155,15 @@ const ListingSchema = mongoose.Schema(
     },
     luex: {
       highlights: {
+        type: String,
+      },
+      minimum_price: {
+        type: String,
+      },
+      nights: {
+        type: String,
+      },
+      currency: {
         type: String,
       },
       summary: {
@@ -162,6 +180,15 @@ const ListingSchema = mongoose.Schema(
       highlights: {
         type: String,
       },
+      minimum_price: {
+        type: String,
+      },
+      nights: {
+        type: String,
+      },
+      currency: {
+        type: String,
+      },
       summary: {
         type: String,
       },
@@ -174,6 +201,15 @@ const ListingSchema = mongoose.Schema(
     },
     worldSurfaris: {
       highlights: {
+        type: String,
+      },
+      minimum_price: {
+        type: String,
+      },
+      nights: {
+        type: String,
+      },
+      currency: {
         type: String,
       },
       summary: {
@@ -190,6 +226,15 @@ const ListingSchema = mongoose.Schema(
       highlights: {
         type: String,
       },
+      minimum_price: {
+        type: String,
+      },
+      nights: {
+        type: String,
+      },
+      currency: {
+        type: String,
+      },
       summary: {
         type: String,
       },
@@ -202,6 +247,15 @@ const ListingSchema = mongoose.Schema(
     },
     atollTravel: {
       highlights: {
+        type: String,
+      },
+      minimum_price: {
+        type: String,
+      },
+      nights: {
+        type: String,
+      },
+      currency: {
         type: String,
       },
       summary: {
@@ -218,6 +272,15 @@ const ListingSchema = mongoose.Schema(
       highlights: {
         type: String,
       },
+      minimum_price: {
+        type: String,
+      },
+      nights: {
+        type: String,
+      },
+      currency: {
+        type: String,
+      },
       summary: {
         type: String,
       },
@@ -230,6 +293,15 @@ const ListingSchema = mongoose.Schema(
     },
     surfline: {
       highlights: {
+        type: String,
+      },
+      minimum_price: {
+        type: String,
+      },
+      nights: {
+        type: String,
+      },
+      currency: {
         type: String,
       },
       summary: {
@@ -246,6 +318,15 @@ const ListingSchema = mongoose.Schema(
       highlights: {
         type: String,
       },
+      minimum_price: {
+        type: String,
+      },
+      nights: {
+        type: String,
+      },
+      currency: {
+        type: String,
+      },
       summary: {
         type: String,
       },
@@ -258,6 +339,15 @@ const ListingSchema = mongoose.Schema(
     },
     thermal: {
       highlights: {
+        type: String,
+      },
+      minimum_price: {
+        type: String,
+      },
+      nights: {
+        type: String,
+      },
+      currency: {
         type: String,
       },
       summary: {
@@ -274,6 +364,15 @@ const ListingSchema = mongoose.Schema(
       highlights: {
         type: String,
       },
+      minimum_price: {
+        type: String,
+      },
+      nights: {
+        type: String,
+      },
+      currency: {
+        type: String,
+      },
       summary: {
         type: String,
       },
@@ -286,6 +385,15 @@ const ListingSchema = mongoose.Schema(
     },
     nomadSurfers: {
       highlights: {
+        type: String,
+      },
+      minimum_price: {
+        type: String,
+      },
+      nights: {
+        type: String,
+      },
+      currency: {
         type: String,
       },
       summary: {
@@ -302,6 +410,15 @@ const ListingSchema = mongoose.Schema(
       highlights: {
         type: String,
       },
+      minimum_price: {
+        type: String,
+      },
+      nights: {
+        type: String,
+      },
+      currency: {
+        type: String,
+      },
       summary: {
         type: String,
       },
@@ -314,6 +431,15 @@ const ListingSchema = mongoose.Schema(
     },
     soulSurfTravel: {
       highlights: {
+        type: String,
+      },
+      minimum_price: {
+        type: String,
+      },
+      nights: {
+        type: String,
+      },
+      currency: {
         type: String,
       },
       summary: {
@@ -330,6 +456,15 @@ const ListingSchema = mongoose.Schema(
       highlights: {
         type: String,
       },
+      minimum_price: {
+        type: String,
+      },
+      nights: {
+        type: String,
+      },
+      currency: {
+        type: String,
+      },
       summary: {
         type: String,
       },
@@ -344,6 +479,15 @@ const ListingSchema = mongoose.Schema(
       highlights: {
         type: String,
       },
+      minimum_price: {
+        type: String,
+      },
+      nights: {
+        type: String,
+      },
+      currency: {
+        type: String,
+      },
       summary: {
         type: String,
       },
@@ -353,6 +497,15 @@ const ListingSchema = mongoose.Schema(
     },
     booking: {
       highlights: {
+        type: String,
+      },
+      minimum_price: {
+        type: String,
+      },
+      nights: {
+        type: String,
+      },
+      currency: {
         type: String,
       },
       summary: {
@@ -367,6 +520,15 @@ const ListingSchema = mongoose.Schema(
       highlights: {
         type: String,
       },
+      minimum_price: {
+        type: String,
+      },
+      nights: {
+        type: String,
+      },
+      currency: {
+        type: String,
+      },
       summary: {
         type: String,
       },
@@ -378,6 +540,15 @@ const ListingSchema = mongoose.Schema(
       highlights: {
         type: String,
       },
+      minimum_price: {
+        type: String,
+      },
+      nights: {
+        type: String,
+      },
+      currency: {
+        type: String,
+      },
       summary: {
         type: String,
       },
@@ -387,6 +558,15 @@ const ListingSchema = mongoose.Schema(
     },
     trivago: {
       highlights: {
+        type: String,
+      },
+      minimum_price: {
+        type: String,
+      },
+      nights: {
+        type: String,
+      },
+      currency: {
         type: String,
       },
       summary: {

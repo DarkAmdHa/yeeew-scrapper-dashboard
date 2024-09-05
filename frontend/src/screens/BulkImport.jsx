@@ -27,10 +27,10 @@ function BulkImport() {
           Papa.parse(newFile, {
             complete: (results) => {
               const headers = results.data[0];
+              debugger;
               if (
-                Object.keys(headers).includes("Business Name") &&
-                Object.keys(headers).includes("Business URL") &&
-                Object.keys(headers).includes("Business Location")
+                Object.keys(headers).includes("Holiday Name") &&
+                Object.keys(headers).includes("Resort URL")
               ) {
                 setFile(newFile);
                 setFileName(newFile.name);
@@ -40,7 +40,7 @@ function BulkImport() {
                 setFileName("");
                 setIsValid(false);
                 toast.error(
-                  "CSV must contain 'Business Name', 'Business URL' and 'Business Location' columns."
+                  "CSV must contain 'Holiday Name' and 'Resort URL' columns."
                 );
               }
             },

@@ -43,18 +43,57 @@ class TripAdvisorFetcher {
     }
   }
 
-  async fetchReviews() {
-    const options = {
-      method: "GET",
-      url: "https://tripadvisor-com1.p.rapidapi.com/hotels/reviews",
-      params: { contentId: this.entityId },
-      headers: {
-        "x-rapidapi-key": process.env.RAPID_API_KEY,
-        "x-rapidapi-host": "tripadvisor-com1.p.rapidapi.com",
-      },
-    };
-    try {
+  async fetchReviewsFn() {
+    let finalData = {};
+    const reviews = [];
+    let keepFetching = true;
+    let page = 1;
+    let updateToken;
+
+    while (keepFetching) {
+      const params = {
+        contentId: this.entityId,
+      };
+      if (page != 1) params.page = page;
+      if (updateToken) params.updateToken = updateToken;
+
+      const options = {
+        method: "GET",
+        url: "https://tripadvisor-com1.p.rapidapi.com/hotels/reviews",
+        params,
+        headers: {
+          "x-rapidapi-key":
+            "2573a59d87mshf5f308cc83e4bafp12b673jsnffc706feb184",
+          "x-rapidapi-host": "tripadvisor-com1.p.rapidapi.com",
+        },
+      };
+
       const { data } = await axios.request(options);
+
+      reviews.push(...data.data.reviews);
+      if (
+        data.meta.currentPage == data.meta.totalPage ||
+        reviews.length >= 60
+      ) {
+        data.data.reviews = reviews.filter(
+          (review) =>
+            review.__typename != "AppPresentation_GAIReviewsSummaryCard"
+        );
+        finalData = data;
+        keepFetching = false;
+      } else {
+        page = data.meta.currentPage + 1;
+        updateToken = data.meta.updateToken;
+      }
+    }
+
+    return finalData;
+  }
+
+  async fetchReviews() {
+    try {
+      const data = await this.fetchReviewsFn();
+      const randomCount = Math.floor(Math.random() * 10) + 50;
 
       if (data.data.reviews && data.data.reviews.length) {
         this.totalReviews =
@@ -74,7 +113,7 @@ class TripAdvisorFetcher {
             reviewHeading.reviewsDetailsV2 &&
             reviewHeading.reviewsDetailsV2.rating;
         }
-        this.reviews = data.data.reviews.map((review) => ({
+        this.reviews = data.data.reviews.map((review, index) => ({
           reviewRating: review.reviewRating ?? "",
           disclaimer: (review.disclaimer && review.disclaimer.string) ?? "",
           reviewText: (review.htmlText && review.htmlText.htmlString) ?? "",
@@ -118,6 +157,8 @@ class TripAdvisorFetcher {
               "",
           },
         }));
+
+        this.reviews = this.reviews.slice(0, randomCount);
       }
     } catch (error) {
       console.error(error);

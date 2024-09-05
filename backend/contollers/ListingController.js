@@ -219,23 +219,24 @@ class ListingController {
         .pipe(csvParser())
         .on("headers", (headers) => {
           if (
-            !headers.includes("Business Name") ||
-            !headers.includes("Business URL") ||
-            !headers.includes("Business Location")
+            !headers.includes("Holiday Name") ||
+            !headers.includes("Resort URL")
           ) {
             errors.push(
-              "CSV must contain 'Business Name', 'Business URL' and 'Business Location' columns."
+              "CSV must contain 'Holiday Name' and 'Resort URL' columns."
             );
           }
         })
         .on("data", (data) => {
-          if (data["Business Name"]) {
-            listings.push({
-              businessName: data["Business Name"],
-              businessURL: data["Business URL"] ? data["Business URL"] : "",
-              businessLocation: data["Business Location"],
+          if (data["Holiday Name"]) {
+            const dataToPush = {
+              businessName: data["Holiday Name"],
+              businessURL: data["Resort URL"] ? data["Resort URL"] : "",
               user: req.user._id,
-            });
+            };
+            if (data["Location"])
+              dataToPush.businessLocation = data["Location"];
+            listings.push(dataToPush);
           } else {
             errors.push(`Invalid row data: ${JSON.stringify(data)}`);
           }
@@ -263,7 +264,7 @@ class ListingController {
               .json({ message: "Businesses Added", listings: savedListings });
           } catch (error) {
             res.status(500);
-            throw new Error("Error while saving listings");
+            console.log("Error while saving listings: ", error);
           }
         })
         .on("error", (error) => {

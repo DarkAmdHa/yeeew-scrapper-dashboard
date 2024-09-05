@@ -100,22 +100,24 @@ class Scrapper {
       if (!listing) {
         throw new Error("Listing not found");
       }
-      const locations = await this.fetchGeocodeData(
-        listing.businessName + listing.businessLocation ?? ""
-      );
+      if (!listing.businessLocation) {
+        let searchQuery = listing.businessName;
+        // if (listing.businessLocation) searchQuery += listing.businessLocation;
+        const locations = await this.fetchGeocodeData(searchQuery);
 
-      if (!locations || !locations.results || !locations.results.length)
-        throw new Error("No location found from geocode data");
-      const item = locations.results[0];
-      const countryNameItem = item.address_components.find((item) =>
-        item.types.includes("country")
-      );
-      const countryName = countryNameItem.long_name;
-      if (countryName) {
-        listing.country = countryName;
-        await listing.save();
-      } else {
-        throw new Error("Country not found in geocode data");
+        if (!locations || !locations.results || !locations.results.length)
+          throw new Error("No location found from geocode data");
+        const item = locations.results[0];
+        const countryNameItem = item.address_components.find((item) =>
+          item.types.includes("country")
+        );
+        const countryName = countryNameItem.long_name;
+        if (countryName) {
+          listing.businessLocation = countryName;
+          await listing.save();
+        } else {
+          throw new Error("Country not found in geocode data");
+        }
       }
 
       // //Try google:
@@ -436,6 +438,11 @@ class Scrapper {
           listing[item.name] = {
             highlights: item.data.highlights ? item.data.highlights : "",
             summary: item.data.textContent ? item.data.textContent : "",
+            minimum_price: item.data.minimum_price
+              ? item.data.minimum_price
+              : "",
+            nights: item.data.nights ? item.data.nights : "",
+            currency: item.data.currency ? item.data.currency : "",
             link: item.data.link ? item.data.link : "",
             content: item.data.content ? item.data.content : "",
           };
@@ -732,6 +739,31 @@ class Scrapper {
           businessSlug
         );
     }
+
+    const perfectWaveFunction = () => {
+      if (
+        document.querySelector(
+          ".price-package-grid .price-package-item p strong"
+        )
+      ) {
+        const text = document.querySelector(".price-package-item p strong");
+        const packagePriceDiv = text.querySelector(".text-strike .wpcs_price");
+        let packagePrice, pricePerDay;
+        if (packagePriceDiv) {
+          packagePrice = packagePriceDiv.innerText
+            .toLowerCase()
+            .replace("usd $", "");
+        }
+
+        const pricePerDayDiv = text.querySelector(".text-gold .wpcs_price");
+        if (pricePerDayDiv) {
+          pricePerDay = pricePerDayDiv.innerText
+            .toLowerCase()
+            .replace("usd $", "");
+        }
+        const packageNumberOfDays = text.innerText.split(" from ")[0];
+      }
+    };
 
     //Trying to get it from ChatGPT as well.
     // try {
@@ -1383,7 +1415,11 @@ class Scrapper {
         listingUrl: "",
         summarize: false,
       },
-      awave: { platformURL: "awave.com.au", listingUrl: "", summarize: false },
+      awave: {
+        platformURL: "awavetravel.com",
+        listingUrl: "",
+        summarize: false,
+      },
       atoll: {
         platformURL: "atolltravel.com",
         listingUrl: "",
@@ -1440,9 +1476,9 @@ class Scrapper {
     const linksArr = Object.keys(links);
     const MAX_NON_SUMMARY = 3;
     let curNonSummary = 0;
-    const loopLength =
-      process.env.NODE_ENV === "development" ? 5 : linksArr.length;
-    // const loopLength = 5;
+    // const loopLength =
+    // process.env.NODE_ENV === "development" ? 5 : linksArr.length;
+    const loopLength = 5;
     for (var i = 0; i < loopLength; i++) {
       const platformName = linksArr[i];
       const platformURL = links[linksArr[i]].platformURL;
@@ -1500,6 +1536,15 @@ class Scrapper {
               : result.sanitizedData,
             highlights: listingDataFromOpenAi.highlights
               ? listingDataFromOpenAi.highlights
+              : "",
+            minimum_price: listingDataFromOpenAi.minimum_price
+              ? listingDataFromOpenAi.minimum_price
+              : "",
+            currency: listingDataFromOpenAi.currency
+              ? listingDataFromOpenAi.currency
+              : "",
+            nights: listingDataFromOpenAi.nights
+              ? listingDataFromOpenAi.nights
               : "",
             images: result.uploadedImageLocations,
             rooms: listingDataFromOpenAi.rooms
