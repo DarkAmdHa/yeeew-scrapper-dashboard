@@ -576,6 +576,8 @@ class Export {
           listing_url: this.businessData.agoda.link
             ? this.businessData.agoda.link
             : null,
+          package_price: "",
+          package_number_of_days: "",
         });
       }
       if (this.businessData.perfectWave.link) {
@@ -584,6 +586,8 @@ class Export {
           listing_url: this.businessData.perfectWave.link
             ? this.businessData.perfectWave.link
             : null,
+          package_price: this.businessData.perfectWave.minimum_price,
+          package_number_of_days: this.businessData.perfectWave.nights,
         });
       }
       if (this.businessData.luex.link) {
@@ -592,6 +596,12 @@ class Export {
           listing_url: this.businessData.luex.link
             ? this.businessData.luex.link
             : null,
+          package_price: this.businessData.luex.minimum_price
+            ? this.businessData.luex.minimum_price
+            : "",
+          package_number_of_days: this.businessData.luex.nights
+            ? this.businessData.luex.nights
+            : "",
         });
       }
       if (this.businessData.waterways.link) {
@@ -600,6 +610,12 @@ class Export {
           listing_url: this.businessData.waterways.link
             ? this.businessData.waterways.link
             : null,
+          package_price: this.businessData.waterways.minimum_price
+            ? this.businessData.waterways.minimum_price
+            : "",
+          package_number_of_days: this.businessData.waterways.nights
+            ? this.businessData.waterways.nights
+            : "",
         });
       }
       if (this.businessData.worldSurfaris.link) {
@@ -608,6 +624,12 @@ class Export {
           listing_url: this.businessData.worldSurfaris.link
             ? this.businessData.worldSurfaris.link
             : null,
+          package_price: this.businessData.worldSurfaris.minimum_price
+            ? this.businessData.worldSurfaris.minimum_price
+            : "",
+          package_number_of_days: this.businessData.worldSurfaris.nights
+            ? this.businessData.worldSurfaris.nights
+            : "",
         });
       }
       if (this.businessData.atollTravel.link) {
@@ -616,6 +638,12 @@ class Export {
           listing_url: this.businessData.atollTravel.link
             ? this.businessData.atollTravel.link
             : null,
+          package_price: this.businessData.atollTravel.minimum_price
+            ? this.businessData.atollTravel.minimum_price
+            : "",
+          package_number_of_days: this.businessData.atollTravel.nights
+            ? this.businessData.atollTravel.nights
+            : "",
         });
       }
       if (this.businessData.surfHolidays.link) {
@@ -624,6 +652,12 @@ class Export {
           listing_url: this.businessData.surfHolidays.link
             ? this.businessData.surfHolidays.link
             : null,
+          package_price: this.businessData.surfHolidays.minimum_price
+            ? this.businessData.surfHolidays.minimum_price
+            : "",
+          package_number_of_days: this.businessData.surfHolidays.nights
+            ? this.businessData.surfHolidays.nights
+            : "",
         });
       }
       if (this.businessData.surfline.link) {
@@ -632,6 +666,13 @@ class Export {
           listing_url: this.businessData.surfline.link
             ? this.businessData.surfline.link
             : null,
+
+          package_price: this.businessData.surfline.minimum_price
+            ? this.businessData.surfline.minimum_price
+            : "",
+          package_number_of_days: this.businessData.surfline.nights
+            ? this.businessData.surfline.nights
+            : "",
         });
       }
       if (this.businessData.lushPalm.link) {
@@ -640,6 +681,13 @@ class Export {
           listing_url: this.businessData.lushPalm.link
             ? this.businessData.lushPalm.link
             : null,
+
+          package_price: this.businessData.lushPalm.minimum_price
+            ? this.businessData.lushPalm.minimum_price
+            : "",
+          package_number_of_days: this.businessData.lushPalm.nights
+            ? this.businessData.lushPalm.nights
+            : "",
         });
       }
       if (this.businessData.thermal.link) {
@@ -648,6 +696,13 @@ class Export {
           listing_url: this.businessData.thermal.link
             ? this.businessData.thermal.link
             : null,
+
+          package_price: this.businessData.thermal.minimum_price
+            ? this.businessData.thermal.minimum_price
+            : "",
+          package_number_of_days: this.businessData.thermal.nights
+            ? this.businessData.thermal.nights
+            : "",
         });
       }
       if (this.businessData.bookSurfCamps.link) {
@@ -656,6 +711,13 @@ class Export {
           listing_url: this.businessData.bookSurfCamps.link
             ? this.businessData.bookSurfCamps.link
             : null,
+
+          package_price: this.businessData.bookSurfCamps.minimum_price
+            ? this.businessData.bookSurfCamps.minimum_price
+            : "",
+          package_number_of_days: this.businessData.bookSurfCamps.nights
+            ? this.businessData.bookSurfCamps.nights
+            : "",
         });
       }
       if (this.businessData.nomadSurfers.link) {
@@ -664,6 +726,13 @@ class Export {
           listing_url: this.businessData.nomadSurfers.link
             ? this.businessData.nomadSurfers.link
             : null,
+
+          package_price: this.businessData.nomadSurfers.minimum_price
+            ? this.businessData.nomadSurfers.minimum_price
+            : "",
+          package_number_of_days: this.businessData.nomadSurfers.nights
+            ? this.businessData.nomadSurfers.nights
+            : "",
         });
       }
       if (this.businessData.stokedSurfAdventures.link) {
@@ -672,6 +741,13 @@ class Export {
           listing_url: this.businessData.stokedSurfAdventures.link
             ? this.businessData.stokedSurfAdventures.link
             : null,
+
+          package_price: this.businessData.stokedSurfAdventures.minimum_price
+            ? this.businessData.stokedSurfAdventures.minimum_price
+            : "",
+          package_number_of_days: this.businessData.stokedSurfAdventures.nights
+            ? this.businessData.stokedSurfAdventures.nights
+            : "",
         });
       }
       if (this.businessData.soulSurfTravel.link) {
@@ -680,6 +756,13 @@ class Export {
           listing_url: this.businessData.soulSurfTravel.link
             ? this.businessData.soulSurfTravel.link
             : null,
+
+          package_price: this.businessData.soulSurfTravel.minimum_price
+            ? this.businessData.soulSurfTravel.minimum_price
+            : "",
+          package_number_of_days: this.businessData.soulSurfTravel.nights
+            ? this.businessData.soulSurfTravel.nights
+            : "",
         });
       }
       if (this.businessData.surfersHype.link) {
@@ -688,6 +771,13 @@ class Export {
           listing_url: this.businessData.surfersHype.link
             ? this.businessData.surfersHype.link
             : null,
+
+          package_price: this.businessData.surfersHype.minimum_price
+            ? this.businessData.surfersHype.minimum_price
+            : "",
+          package_number_of_days: this.businessData.surfersHype.nights
+            ? this.businessData.surfersHype.nights
+            : "",
         });
       }
 

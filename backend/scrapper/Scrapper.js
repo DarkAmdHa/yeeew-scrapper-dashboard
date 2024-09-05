@@ -15,6 +15,7 @@ import PricelineAPIFetcher from "./PricelineAPIFetcher.js";
 import HotelsAPIFetcher from "./HotelsAPIFetcher.js";
 import TripAdvisorFetcher from "./TripAdvisorFetcher.js";
 import { highlightsBlueprint, promptToScrapeContent } from "./constants.js";
+import { scrapePricesAndDataFromPlatforms } from "../utils/functions.js";
 
 class Scrapper {
   constructor(businessData, operationId) {
@@ -62,11 +63,11 @@ class Scrapper {
       this.businessData.businessLocation,
       this.scrapedData
     );
-    if (process.env.NODE_ENV != "development")
-      this.scrapedData = await this.scrapePlatforms(
-        this.businessData,
-        this.scrapedData
-      );
+
+    this.scrapedData = await this.scrapePlatforms(
+      this.businessData,
+      this.scrapedData
+    );
     if (process.env.NODE_ENV != "development") {
       this.scrapedData = await this.scrapeFromBookingAPI();
       this.scrapedData = await this.scrapeFromPricelineAPI();
@@ -712,7 +713,8 @@ class Scrapper {
     scrapingImages = false,
     businessSlug,
     dynamic,
-    platformName = ""
+    platformName = "",
+    args
   ) => {
     const browser = await pt.launch({ headless: true });
 
@@ -720,7 +722,24 @@ class Scrapper {
 
     await page.setViewport({ width: 1000, height: 500 });
 
-    await page.goto(link, { timeout: 90000 });
+    //If it's a platform, don't wait until entire load, since most of the sites are unoptimized:
+    try {
+      await page.goto(link, {
+        waitUntil: "networkidle2",
+        timeout: args && args.timeout ? args.timeout : 30000,
+      });
+    } catch (error) {
+      console.log(error);
+
+      const bodyContent = await page.evaluate(() =>
+        document.body.innerText.trim()
+      );
+
+      if (bodyContent.length === 0) {
+        await browser.close();
+        throw error;
+      }
+    }
 
     if (process.env.NODE_ENV === "development") scrapingImages = false;
 
@@ -739,31 +758,6 @@ class Scrapper {
           businessSlug
         );
     }
-
-    const perfectWaveFunction = () => {
-      if (
-        document.querySelector(
-          ".price-package-grid .price-package-item p strong"
-        )
-      ) {
-        const text = document.querySelector(".price-package-item p strong");
-        const packagePriceDiv = text.querySelector(".text-strike .wpcs_price");
-        let packagePrice, pricePerDay;
-        if (packagePriceDiv) {
-          packagePrice = packagePriceDiv.innerText
-            .toLowerCase()
-            .replace("usd $", "");
-        }
-
-        const pricePerDayDiv = text.querySelector(".text-gold .wpcs_price");
-        if (pricePerDayDiv) {
-          pricePerDay = pricePerDayDiv.innerText
-            .toLowerCase()
-            .replace("usd $", "");
-        }
-        const packageNumberOfDays = text.innerText.split(" from ")[0];
-      }
-    };
 
     //Trying to get it from ChatGPT as well.
     // try {
@@ -812,8 +806,12 @@ class Scrapper {
       sanitizedData = await this.sanitizeHTML(HTML);
     }
 
+    const scrapedData = await scrapePricesAndDataFromPlatforms(page);
+
     await browser.close();
-    return { uploadedImageLocations, sanitizedData };
+    const returnData = { uploadedImageLocations, sanitizedData };
+    if (scrapedData) returnData.scrapedData = scrapedData;
+    return returnData;
   };
 
   scrapeImagesFromBooking = async (page) => {
@@ -946,7 +944,15 @@ class Scrapper {
     for (let i = 0; i < links.length; i++) {
       // const linkData = await regularFetch(links[i]);
       try {
-        const result = await this.puppeteerLoadFetch(links[i], true);
+        const result = await this.puppeteerLoadFetch(
+          links[i],
+          true,
+          false,
+          undefined,
+          undefined,
+          "",
+          { timeout: 5000 }
+        );
         const linkData = result.sanitizedData;
         relevantLinks.push({
           link: links[i],
@@ -1478,7 +1484,7 @@ class Scrapper {
     let curNonSummary = 0;
     // const loopLength =
     // process.env.NODE_ENV === "development" ? 5 : linksArr.length;
-    const loopLength = 5;
+    const loopLength = 2;
     for (var i = 0; i < loopLength; i++) {
       const platformName = linksArr[i];
       const platformURL = links[linksArr[i]].platformURL;
@@ -1506,7 +1512,8 @@ class Scrapper {
             businessData.data.scrapeImages,
             this.generateSlug(businessName),
             true,
-            platformName
+            platformName,
+            { timeout: 5000 }
           );
 
           if (platformName == "booking") {
@@ -1537,15 +1544,24 @@ class Scrapper {
             highlights: listingDataFromOpenAi.highlights
               ? listingDataFromOpenAi.highlights
               : "",
-            minimum_price: listingDataFromOpenAi.minimum_price
-              ? listingDataFromOpenAi.minimum_price
-              : "",
-            currency: listingDataFromOpenAi.currency
-              ? listingDataFromOpenAi.currency
-              : "",
-            nights: listingDataFromOpenAi.nights
-              ? listingDataFromOpenAi.nights
-              : "",
+            minimum_price:
+              result.scrapedData && result.scrapedData.minimum_price
+                ? result.scrapedData.minimum_price
+                : listingDataFromOpenAi.minimum_price
+                ? listingDataFromOpenAi.minimum_price
+                : "",
+            currency:
+              result.scrapedData && result.scrapedData.currency
+                ? result.scrapedData.currency
+                : listingDataFromOpenAi.currency
+                ? listingDataFromOpenAi.currency
+                : "",
+            nights:
+              result.scrapedData && result.scrapedData.nights
+                ? result.scrapedData.nights
+                : listingDataFromOpenAi.nights
+                ? listingDataFromOpenAi.nights
+                : "",
             images: result.uploadedImageLocations,
             rooms: listingDataFromOpenAi.rooms
               ? listingDataFromOpenAi.rooms
