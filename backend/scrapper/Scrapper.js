@@ -16,7 +16,7 @@ import HotelsAPIFetcher from "./HotelsAPIFetcher.js";
 import TripAdvisorFetcher from "./TripAdvisorFetcher.js";
 import { highlightsBlueprint, promptToScrapeContent } from "./constants.js";
 import { scrapePricesAndDataFromPlatforms } from "../utils/functions.js";
-
+const MAX_IMAGES_SCRAPPABLE = 20;
 class Scrapper {
   constructor(businessData, operationId) {
     this.businessData = businessData;
@@ -24,6 +24,8 @@ class Scrapper {
     this.scrapedData = {};
     this.operationStatus = "";
     this.enoughData = false;
+
+    this.totalImagesScrapped = 0;
   }
 
   async init() {
@@ -749,14 +751,17 @@ class Scrapper {
     }
     let sanitizedData;
     let uploadedImageLocations = [];
-    if (scrapingImages) {
+    if (scrapingImages && this.totalImagesScrapped < MAX_IMAGES_SCRAPPABLE) {
       //Scrape images from browser:
       const images = await this.scrapeImages(page, platformName);
-      if (images.length)
+      if (images.length) {
+        //Limit to the number allowed:
+
         uploadedImageLocations = await this.saveImagesToS3(
           images,
           businessSlug
         );
+      }
     }
 
     //Trying to get it from ChatGPT as well.
@@ -851,6 +856,9 @@ class Scrapper {
         });
         return imagesArray;
       });
+    }
+    if (images && images.length) {
+      this.totalImagesScrapped += images.length;
     }
     return images;
   }
