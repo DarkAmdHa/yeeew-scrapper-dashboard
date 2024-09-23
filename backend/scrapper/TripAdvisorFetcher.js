@@ -35,7 +35,7 @@ class TripAdvisorFetcher {
     try {
       const { data } = await axios.request(options);
       if (data.data.length) {
-        this.entityId = data.data[0].contentId;
+        this.entityId = data.data[0].geoId;
         if (this.entityId) await this.fetchResortDetails();
       }
     } catch (error) {
@@ -62,8 +62,7 @@ class TripAdvisorFetcher {
         url: "https://tripadvisor-com1.p.rapidapi.com/hotels/reviews",
         params,
         headers: {
-          "x-rapidapi-key":
-            "2573a59d87mshf5f308cc83e4bafp12b673jsnffc706feb184",
+          "x-rapidapi-key": process.env.RAPID_API_KEY,
           "x-rapidapi-host": "tripadvisor-com1.p.rapidapi.com",
         },
       };

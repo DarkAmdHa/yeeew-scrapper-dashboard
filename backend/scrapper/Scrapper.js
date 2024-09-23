@@ -1347,7 +1347,7 @@ class Scrapper {
       const response = await this.openAiWithPrompts([
         {
           role: "user",
-          content: `Get the address and phone number of ${businessName} if listed in the following HTML code of the google page. In some instances, you might also be able to pick up the latitude and longitude of the business (in case a link to Google Maps is present). In those cases, please also return the "latitude" and "longitude" in the JSON. Longitude and latitude are optional, and should only be returned if actually found in the code. if they are undefined or not found at all, simply do not return them in the JSON. If none of the data is  found, just return a JSON with data: {}, else, return data:{phone: PHONENUMBER, address: ADDRESS, longitude: LONGITUDE, latitude: LATITUDE}. The PHONENUMBER and ADDRESS should always be a string. If you find multiple phone numbers, just concatenate them with a ','. If there are multiple addresses, just select the first one.
+          content: `Get the address and phone number of ${businessName} if listed in the following HTML code of the google page. In some instances, you might also be able to pick up the latitude and longitude of the business (in case a link to Google Maps is present). In those cases, please also return the "latitude" and "longitude" in the JSON. Longitude and latitude are optional, and should only be returned if actually found in the code. if they are not found at all, simply do not return them in the JSON object (no keys for lat and long needed). If none of the data is  found, just return a JSON with data: {}, else, return data:{phone: PHONENUMBER, address: ADDRESS, longitude: LONGITUDE, latitude: LATITUDE}. The PHONENUMBER and ADDRESS should always be a string. If you find multiple phone numbers, just concatenate them with a ','. If there are multiple addresses, just select the first one.
             Here is the html code: ${pageGoogleHTML}
           `,
         },
@@ -1490,9 +1490,9 @@ class Scrapper {
     const linksArr = Object.keys(links);
     const MAX_NON_SUMMARY = 3;
     let curNonSummary = 0;
-    // const loopLength =
-    // process.env.NODE_ENV === "development" ? 5 : linksArr.length;
-    const loopLength = 2;
+    const loopLength =
+      process.env.NODE_ENV === "development" ? 0 : linksArr.length;
+    // const loopLength = 2;
     for (var i = 0; i < loopLength; i++) {
       const platformName = linksArr[i];
       const platformURL = links[linksArr[i]].platformURL;
