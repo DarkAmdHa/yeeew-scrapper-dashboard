@@ -5,3 +5,9 @@ node_modules
 
 keys
 temp
+
+.csv
+
+*/*.csv
+
+*/AgodaDataFile.csv
