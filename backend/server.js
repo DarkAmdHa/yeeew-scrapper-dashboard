@@ -14,7 +14,8 @@ import {
 } from "./scrapper/ScrapperCRON.js";
 
 import { errorHandler, notFound } from "./middleware/errorMiddleware.js";
-import Scrapper from "./scrapper/Scrapper.js";
+import AgodaAPIFetcher from "./scrapper/AgodaAPIFetcher.js";
+import Listing from "./models/listingModel.js";
 
 dotenv.config();
 
@@ -34,6 +35,12 @@ app.use("/api/operations", operationRoutes);
 app.use("/api/auth", authRoutes);
 // app.use("/api/scrapper", scrapperRoutes);
 
+// const fethcer = new AgodaAPIFetcher("Funky Fish");
+// const data = await fethcer.lookupBusiness();
+
+// const listing = await Listing.findById("66f35e6576a2bce48c104ce2");
+// listing.apiData.agoda = data;
+// await listing.save();
 cron.schedule("*/5 * * * *", () => {
   //Every 5 minutes
   console.log("Running CRON job to check for operations");

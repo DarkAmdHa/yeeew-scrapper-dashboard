@@ -199,7 +199,7 @@ export default function DashboardHome() {
     try {
       const data = await getListings(
         currentPage,
-        10,
+        15,
         sortBy,
         query,
         regionFilters,

@@ -10,6 +10,8 @@ import fs from "fs";
 import stream from "stream";
 
 import Scrapper from "../scrapper/Scrapper.js";
+import TripAdvisorFetcher from "../scrapper/TripAdvisorFetcher.js";
+import AgodaAPIFetcher from "../scrapper/AgodaAPIFetcher.js";
 const scrapper = new Scrapper();
 
 const upload = multer({
@@ -299,6 +301,121 @@ class ListingController {
     } catch (error) {
       res.status(400);
       throw new Error(error.message);
+    }
+  });
+
+  refetchReviews = asyncHandler(async (req, res) => {
+    const { apiListingId } = req.body;
+    const { id } = req.params;
+    if (!id) {
+      res.status(400);
+      throw new Error("Listing ID required");
+    }
+
+    const business = await Listing.findById(id);
+
+    if (!business) {
+      res.status(404);
+      throw new Error("Listing not found");
+    }
+
+    try {
+      let apiResponse;
+      if (apiListingId) {
+        //Refetch Reviews:
+
+        const reviewsFetcher = new TripAdvisorFetcher(
+          business.businessName,
+          apiListingId
+        );
+        apiResponse = await reviewsFetcher.init();
+
+        if (apiResponse.id && apiResponse.data) {
+          business.apiData.tripadvisor = apiResponse;
+        }
+      } else {
+        const reviewsFetcher = new TripAdvisorFetcher(business.businessName);
+        apiResponse = await reviewsFetcher.init();
+
+        if (apiResponse && apiResponse.id) {
+          business.apiData.tripadvisor = apiResponse;
+        }
+      }
+
+      if (
+        apiResponse &&
+        apiResponse.id &&
+        apiResponse.data &&
+        apiResponse.data.reviews.length
+      ) {
+        await business.save();
+        res.json({
+          found: true,
+          message: "Reviews Refetched",
+        });
+      } else {
+        res.json({
+          found: false,
+          message:
+            "Reviews Refetched but no listing for the business was found.",
+        });
+      }
+    } catch (error) {
+      console.log(error);
+      res.status(500);
+      throw new Error("Something went wrong while refetching reviews");
+    }
+  });
+  refetchAgoda = asyncHandler(async (req, res) => {
+    const { customName } = req.body;
+    const { id } = req.params;
+    if (!id) {
+      res.status(400);
+      throw new Error("Listing ID required");
+    }
+    if (!customName) {
+      res.status(400);
+      throw new Error("Business name required");
+    }
+
+    const business = await Listing.findById(id);
+
+    if (!business) {
+      res.status(404);
+      throw new Error("Listing not found");
+    }
+
+    try {
+      const resortFetcher = new AgodaAPIFetcher(customName);
+      const apiResponse = await resortFetcher.lookupBusiness();
+
+      if (apiResponse && apiResponse.id) {
+        business.apiData.agoda = apiResponse;
+      }
+
+      if (apiResponse && apiResponse.id && apiResponse.data) {
+        await business.save();
+        res.json({
+          found: true,
+          message: "Agoda Data Refetched",
+        });
+      } else {
+        //Remove any existing erroneous one:
+        const { agoda, ...updatedApiData } = business.apiData;
+
+        business.apiData = { ...updatedApiData };
+        await business.save();
+
+        res.json({
+          found: true,
+          message:
+            "Agoda Data was rechecked but no listing for the business was found.",
+        });
+      }
+    } catch (error) {
+      console.log(error);
+      res.status(500);
+      throw new Error("Something went wrong while refetching data from Agoda");
     }
   });
 }

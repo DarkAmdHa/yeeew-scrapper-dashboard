@@ -570,16 +570,16 @@ class Export {
   exportAffiliate() {
     try {
       const affiliates = [];
-      if (this.businessData.agoda.link) {
-        affiliates.push({
-          affiliate_name: 1867,
-          listing_url: this.businessData.agoda.link
-            ? this.businessData.agoda.link
-            : null,
-          package_price: "",
-          package_number_of_days: "",
-        });
-      }
+      // if (this.businessData.agoda.link) {
+      //   affiliates.push({
+      //     affiliate_name: 1867,
+      //     listing_url: this.businessData.agoda.link
+      //       ? this.businessData.agoda.link
+      //       : null,
+      //     package_price: "",
+      //     package_number_of_days: "",
+      //   });
+      // }
       if (this.businessData.perfectWave.link) {
         affiliates.push({
           affiliate_name: 1862,
@@ -782,6 +782,17 @@ class Export {
       }
 
       if (this.businessData.apiData) {
+        if (this.businessData.apiData.agoda) {
+          affiliates.push({
+            affiliate_name: 1867,
+            affiliate_id: this.businessData.apiData.agoda.id
+              ? this.businessData.apiData.agoda.id
+              : null,
+            listing_url: this.businessData.apiData.agoda.data.url
+              ? this.businessData.apiData.agoda.data.url
+              : null,
+          });
+        }
         if (this.businessData.apiData.tripadvisor) {
           affiliates.push({
             affiliate_name: 3878,

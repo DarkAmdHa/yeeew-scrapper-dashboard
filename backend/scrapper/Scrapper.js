@@ -16,6 +16,7 @@ import HotelsAPIFetcher from "./HotelsAPIFetcher.js";
 import TripAdvisorFetcher from "./TripAdvisorFetcher.js";
 import { highlightsBlueprint, promptToScrapeContent } from "./constants.js";
 import { scrapePricesAndDataFromPlatforms } from "../utils/functions.js";
+import AgodaAPIFetcher from "./AgodaAPIFetcher.js";
 const MAX_IMAGES_SCRAPPABLE = 20;
 class Scrapper {
   constructor(businessData, operationId) {
@@ -76,6 +77,7 @@ class Scrapper {
       this.scrapedData = await this.scrapeFromHotelsAPI();
     }
     this.scrapedData = await this.scrapeFromTripAdvisor();
+    this.scrapedData = await this.getAgodaData();
     if (this.listingHasEnoughData(this.scrapedData)) {
       //Only proceed if enough data was gathered
       this.scrapedData = await this.generateFinalContent(
@@ -268,6 +270,29 @@ class Scrapper {
         error
       );
       this.logError("Error encountered while fetching from TripAdvisor API");
+    }
+
+    return this.scrapedData;
+  }
+
+  async getAgodaData() {
+    try {
+      const resortFetcher = new AgodaAPIFetcher(this.businessData.businessName);
+      const apiResponse = await resortFetcher.lookupBusiness();
+
+      if (this.scrapedData.data.apiData) {
+        this.scrapedData.data.apiData.agoda = apiResponse;
+      } else {
+        this.scrapedData.data.apiData = {
+          agoda: apiResponse,
+        };
+      }
+    } catch (error) {
+      console.log(
+        "Error encountered while fetching from Agoda Data File:",
+        error
+      );
+      this.logError("Error encountered while fetching from Agoda Data File");
     }
 
     return this.scrapedData;

@@ -1,15 +1,18 @@
 import axios from "axios";
 class TripAdvisorFetcher {
-  constructor(businessName) {
+  constructor(businessName, entityId) {
     this.businessName = businessName;
-    this.entityId = "";
+    this.entityId = entityId ? entityId : "";
     this.reviews = [];
     this.totalReviews = 0;
     this.rating = 0;
   }
 
   async init() {
-    await this.getBusinessId(this.businessName);
+    if (!this.entityId) await this.getBusinessId(this.businessName);
+    else {
+      await this.fetchResortDetails();
+    }
     if (this.entityId)
       return {
         id: this.entityId,
@@ -34,7 +37,7 @@ class TripAdvisorFetcher {
 
     try {
       const { data } = await axios.request(options);
-      if (data.data.length) {
+      if (data.data.length && data.data[0].geoId) {
         this.entityId = data.data[0].geoId;
         if (this.entityId) await this.fetchResortDetails();
       }
@@ -75,8 +78,7 @@ class TripAdvisorFetcher {
         reviews.length >= 60
       ) {
         data.data.reviews = reviews.filter(
-          (review) =>
-            review.__typename != "AppPresentation_GAIReviewsSummaryCard"
+          (review) => review.__typename == "AppPresentation_ReviewCard"
         );
         finalData = data;
         keepFetching = false;

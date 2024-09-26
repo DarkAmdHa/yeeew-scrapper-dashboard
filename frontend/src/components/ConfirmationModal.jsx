@@ -12,6 +12,9 @@ export default function ConfirmationModal({
   checkbox,
   handleCheckboxChange,
   checkboxText,
+  inputValue,
+  onInputValueChange,
+  inputError,
 }) {
   const [open, setOpen] = useState(true);
 
@@ -88,6 +91,27 @@ export default function ConfirmationModal({
                         </label>
                       </div>
                     )}
+                    {onInputValueChange && (
+                      <div className="mt-2 flex flex-col">
+                        <label
+                          htmlFor={`modal-input-field`}
+                          className="text-sm mb-1 mt-4"
+                        >
+                          Business Name
+                        </label>
+                        <input
+                          className="border p-2 outline-none"
+                          type="text"
+                          placeholder="Business Name"
+                          value={inputValue}
+                          onChange={(e) => onInputValueChange(e.target.value)}
+                          id={`modal-input-field`}
+                        />
+                        {inputError && (
+                          <p className="text-red-500">{inputError}</p>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
                 <div className="mt-5 sm:ml-10 sm:mt-4 sm:flex sm:pl-4">
@@ -99,7 +123,12 @@ export default function ConfirmationModal({
                         : "bg-green-600 hover:bg-green-500 "
                     } px-3 py-2 text-sm font-semibold  shadow-sm  sm:w-auto text-white`}
                     onClick={() => {
-                      setOpen(false);
+                      if (
+                        !onInputValueChange ||
+                        (onInputValueChange && inputValue)
+                      ) {
+                        setOpen(false);
+                      }
                       onAccept();
                     }}
                   >

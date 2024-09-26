@@ -15,6 +15,7 @@ import HotelsAPIData from "../components/HotelsAPIData";
 import BookingAPIData from "../components/BookingAPIData";
 import PriceLineAPIData from "../components/PriceLineAPIData";
 import TripAdvisorAPIData from "../components/TripAdvisorAPIData";
+import AgodaAPIData from "../components/AgodaAPIData";
 
 const initialState = {
   businessName: "",
@@ -205,7 +206,7 @@ export default function BusinessPage() {
                     <p className="text-white font-semibold">
                       {changeableListing.country}
                     </p>
-                  </div>  
+                  </div>
                 </div>
               )}
             </div>
@@ -586,15 +587,23 @@ export default function BusinessPage() {
                   />
                 </>
               )}
-            {changeableListing &&
-              changeableListing.apiData &&
-              changeableListing.apiData.tripadvisor && (
-                <>
-                  <TripAdvisorAPIData
-                    tripadvisorData={changeableListing.apiData.tripadvisor}
-                  />
-                </>
-              )}
+            {changeableListing && changeableListing.apiData && (
+              <>
+                <TripAdvisorAPIData
+                  listingId={changeableListing._id}
+                  tripadvisorData={changeableListing.apiData.tripadvisor}
+                />
+              </>
+            )}
+            {changeableListing && changeableListing.apiData && (
+              <>
+                <AgodaAPIData
+                  agodaData={changeableListing.apiData.agoda}
+                  listingId={changeableListing._id}
+                  listingName={changeableListing.businessName}
+                />
+              </>
+            )}
           </div>
           <div className="flex items-center justify-end gap-x-6 border-t border-gray-500/10 px-4 py-4 sm:px-8"></div>
         </div>

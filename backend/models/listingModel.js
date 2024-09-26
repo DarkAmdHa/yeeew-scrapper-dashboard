@@ -4,6 +4,7 @@ import bookingAPIDataSchema from "./bookingAPISchema.js";
 import pricelineSchema from "./pricelineAPISchema.js";
 import hotelSchema from "./hotelsAPISchema.js";
 import tripAdvisorAPIDataSchema from "./tripAdvisorAPISchema.js";
+import agodaAPIDataSchema from "./agodaAPISchema.js";
 
 const roomSchema = mongoose.Schema({
   roomName: {
@@ -96,6 +97,7 @@ const ListingSchema = mongoose.Schema(
       priceline: pricelineSchema,
       hotels: hotelSchema,
       tripadvisor: tripAdvisorAPIDataSchema,
+      agoda: agodaAPIDataSchema,
     },
     location: {
       type: String,
