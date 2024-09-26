@@ -8,6 +8,4 @@ temp
 
 .csv
 
-*/*.csv
-
-*/AgodaDataFile.csv
+*/**/*.csv
