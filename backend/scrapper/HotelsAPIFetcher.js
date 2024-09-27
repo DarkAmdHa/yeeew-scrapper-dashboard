@@ -1,5 +1,6 @@
 // const axios = require("axios");
 import axios from "axios";
+import { logToConsole } from "../utils/functions.js";
 
 class HotelsAPIFetcher {
   constructor(businessName) {
@@ -31,8 +32,8 @@ class HotelsAPIFetcher {
       url: "https://hotels-com-provider.p.rapidapi.com/v2/regions",
       params: {
         query: businessName,
-        domain: "AR",
-        locale: "en_GB",
+        domain: "AU",
+        locale: "en_AU",
       },
       headers: {
         "x-rapidapi-key": process.env.RAPID_API_KEY,
@@ -59,7 +60,7 @@ class HotelsAPIFetcher {
         }
       }
     } catch (error) {
-      console.error(error);
+      logToConsole(error);
     }
   }
 
@@ -67,7 +68,7 @@ class HotelsAPIFetcher {
     const options = {
       method: "GET",
       url: "https://hotels-com-provider.p.rapidapi.com/v2/hotels/details",
-      params: { hotel_id: this.entityId, domain: "AR", locale: "en_GB" },
+      params: { hotel_id: this.entityId, domain: "AU", locale: "en_AU" },
       headers: {
         "x-rapidapi-key": process.env.RAPID_API_KEY,
         "x-rapidapi-host": "hotels-com-provider.p.rapidapi.com",
@@ -188,7 +189,7 @@ class HotelsAPIFetcher {
       };
       this.description = newData;
     } catch (error) {
-      console.error(error);
+      logToConsole(error);
     }
   }
 

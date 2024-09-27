@@ -1,3 +1,5 @@
+import axios from "axios";
+
 export const formatDate = (date) => {
   const options = {
     month: "2-digit",
@@ -271,4 +273,20 @@ export const scrapePricesAndDataFromPlatforms = async (page) => {
   });
 
   return scrapedData;
+};
+
+export const logToConsole = (erorr) => {
+  if (axios.isAxiosError(error)) {
+    if (error.response) {
+      console.error("Axios Response Error:");
+      console.error("Data:", error.response.data);
+    } else if (error.request) {
+      console.error("Axios Request Error:", error.request);
+    } else {
+      console.error("Axios Error Message:", error.message);
+    }
+  } else {
+    console.error("General Error:", error.message);
+    console.error("Stack Trace:", error.stack);
+  }
 };

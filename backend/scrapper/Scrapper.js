@@ -637,26 +637,39 @@ class Scrapper {
       response.parsedJSONResponse.nextLink != "" &&
       iteration < maxIterations
     ) {
-      iteration++;
       const previousData = {
         previousReturnedData: response.parsedJSONResponse.data,
         visitedLinks,
       };
-      console.log(
-        `Scraping Next Link: ${response.parsedJSONResponse.nextLink}`.green
-      );
-      response = await this.siteInfoScrapper(
-        response.parsedJSONResponse.nextLink,
-        prompts,
-        previousData,
-        true
-      );
+
       if (
-        response.uploadedImageLocations &&
-        response.uploadedImageLocations.length
-      )
-        imagesFromMain.push(...response.uploadedImageLocations);
-      visitedLinks.push(response.parsedJSONResponse.nextLink);
+        !visitedLinks.find((li) => li == response.parsedJSONResponse.nextLink)
+      ) {
+        iteration++;
+
+        console.log(
+          `Scraping Next Link: ${response.parsedJSONResponse.nextLink}`.green
+        );
+        response = await this.siteInfoScrapper(
+          response.parsedJSONResponse.nextLink,
+          prompts,
+          previousData,
+          true
+        );
+        if (
+          response.uploadedImageLocations &&
+          response.uploadedImageLocations.length
+        )
+          imagesFromMain.push(...response.uploadedImageLocations);
+        visitedLinks.push(response.parsedJSONResponse.nextLink);
+      } else {
+        response = await this.siteInfoScrapper(
+          response.parsedJSONResponse.nextLink,
+          prompts,
+          previousData,
+          false
+        );
+      }
     }
 
     console.log(
@@ -879,6 +892,30 @@ class Scrapper {
             imagesArray.push(image.src);
           }
         });
+
+        const allElements = document.querySelectorAll("*");
+
+        allElements.forEach((element) => {
+          const style = window.getComputedStyle(element);
+
+          if (
+            style.backgroundImage &&
+            style.backgroundImage !== "none" &&
+            style.backgroundImage.toLowerCase().includes("url(")
+          ) {
+            // Extract the background image URL
+            const imgUrl = style.backgroundImage.slice(5, -2);
+
+            const width = element.offsetWidth;
+            const height = element.offsetHeight;
+
+            // Push details to the array
+            if (width > 450 ) {
+              imagesArray.push(imgUrl);
+            }
+          }
+        });
+
         return imagesArray;
       });
     }
@@ -1324,7 +1361,7 @@ class Scrapper {
           role: "user",
           content: `Here's a json containing the previous data you sent as well as links you've already visited: ${JSON.stringify(
             previousData
-          )}`,
+          )}. The following is absolutely crucial: Make sure that the next link you send back is not already within this provided list of visited links. `,
         });
       }
 
@@ -1546,7 +1583,7 @@ class Scrapper {
             this.generateSlug(businessName),
             true,
             platformName,
-            { timeout: 5000 }
+            { timeout: 15000 }
           );
 
           if (platformName == "booking") {

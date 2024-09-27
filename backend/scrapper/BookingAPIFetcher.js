@@ -1,4 +1,5 @@
 import axios from "axios";
+import { logToConsole } from "../utils/functions.js";
 class BookingAPIFetcher {
   constructor(businessName) {
     this.businessName = businessName;
@@ -49,7 +50,7 @@ class BookingAPIFetcher {
         if (this.entityId) await this.fetchResortDetails();
       }
     } catch (error) {
-      console.error(error);
+      logToConsole(error);
     }
   }
 
@@ -70,7 +71,7 @@ class BookingAPIFetcher {
         this.description = data.data.map((item) => item.description);
       }
     } catch (error) {
-      console.error(error);
+      logToConsole(error);
     }
   }
 
@@ -93,7 +94,7 @@ class BookingAPIFetcher {
           .filter(Boolean);
       }
     } catch (error) {
-      console.error(error);
+      logToConsole(error);
     }
   }
 
@@ -128,7 +129,7 @@ class BookingAPIFetcher {
         })),
       };
     } catch (error) {
-      console.error(error);
+      logToConsole(error);
     }
   }
 

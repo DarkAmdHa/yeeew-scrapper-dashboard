@@ -1,4 +1,5 @@
 import axios from "axios";
+import { logToConsole } from "../utils/functions.js";
 class TripAdvisorFetcher {
   constructor(businessName, entityId) {
     this.businessName = businessName;
@@ -42,7 +43,7 @@ class TripAdvisorFetcher {
         if (this.entityId) await this.fetchResortDetails();
       }
     } catch (error) {
-      console.error(error);
+      logToConsole(error);
     }
   }
 
@@ -162,7 +163,7 @@ class TripAdvisorFetcher {
         this.reviews = this.reviews.slice(0, randomCount);
       }
     } catch (error) {
-      console.error(error);
+      logToConsole(error);
     }
   }
 

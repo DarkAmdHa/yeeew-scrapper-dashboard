@@ -1,5 +1,6 @@
 // const axios = require("axios");
 import axios from "axios";
+import { logToConsole } from "../utils/functions.js";
 
 class PricelineAPIFetcher {
   constructor(businessName) {
@@ -53,7 +54,7 @@ class PricelineAPIFetcher {
         }
       }
     } catch (error) {
-      console.error(error);
+      logToConsole(error);
     }
   }
 
@@ -95,7 +96,7 @@ class PricelineAPIFetcher {
       };
       this.description = newData;
     } catch (error) {
-      console.error(error);
+      logToConsole(error);
     }
   }
 
