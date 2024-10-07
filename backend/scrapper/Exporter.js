@@ -559,6 +559,31 @@ class Export {
 
   exportImagesToGallery() {
     let images = this.businessData.scrapedImages;
+    //If images length is inadequate, fill the ranks with images scrapped from APIs
+    if (images.length < 20) {
+      if (this.businessData.apiData) {
+        const newImagesArr = [];
+        const hotelGallery =
+          this.businessData.apiData?.hotels?.data?.propertyGallery;
+        const pricelineGallery =
+          this.businessData.apiData?.priceline?.data?.propertyGallery;
+
+        if (hotelGallery) {
+          newImagesArr.push(...hotelGallery.map((gal) => gal.url));
+        }
+
+        if (pricelineGallery) {
+          newImagesArr.push(...pricelineGallery.map((gal) => gal.imageUrl));
+        }
+
+        newImagesArr.forEach((im) => {
+          if (images.length < 30) {
+            images.push(im);
+          }
+        });
+      }
+    }
+
     if (images.length) {
       //For now, just store names:
       this.acfExportObject.acf["image_gallery"] = images.map((image) => ({

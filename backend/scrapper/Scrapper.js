@@ -887,7 +887,7 @@ class Scrapper {
       images = await page.evaluate(() => {
         const imagesArray = [];
         document.querySelectorAll("img").forEach((image, index) => {
-          if (image.naturalWidth >= 1500 && index <= 20) {
+          if (index <= 30) {
             // Check image sizer
             imagesArray.push(image.src);
           }
@@ -910,18 +910,27 @@ class Scrapper {
             const height = element.offsetHeight;
 
             // Push details to the array
-            if (width > 450 ) {
+            if (width > 450) {
               imagesArray.push(imgUrl);
             }
           }
         });
 
-        return imagesArray;
+        const isValidUrl = (url) => {
+          try {
+            new URL(url);
+            return true;
+          } catch (error) {
+            return false;
+          }
+        };
+
+        const finalImagesUrlArray = imagesArray.filter((im) => isValidUrl(im));
+
+        return finalImagesUrlArray;
       });
     }
-    if (images && images.length) {
-      this.totalImagesScrapped += images.length;
-    }
+
     return images;
   }
 
@@ -942,10 +951,21 @@ class Scrapper {
         if (!response.ok) {
           throw new Error("Invalid URL");
         }
+        const contentType = response.headers.get("content-type");
+        if (!contentType || !contentType.startsWith("image/")) {
+          throw new Error("Content not an image");
+        }
         const data = await response.arrayBuffer();
         const imageData = Buffer.from(data);
 
         const fileType = await fileTypeFromBuffer(data);
+        const size = imageSize(imageData);
+        if (size.width < 750) {
+          throw new Error(
+            "Image of inadequate size: " +
+              `width: ${size.width} , height: ${size.height}`
+          );
+        }
         if (!fileType || !fileType.ext) {
           throw new Error("Image of no type");
         }
@@ -981,6 +1001,9 @@ class Scrapper {
           `File uploaded successfully. Location:${uploadResult.Location}`.green
         );
         uploadedImageLocations.push(uploadResult.Location); // Add the upload location to the array
+
+        //Increment total scrapped images' count:
+        this.totalImagesScrapped += 1;
       } catch (error) {
         console.error(`Error uploading file:${error}`.red);
         await this.logError(`Error uploading file:${error}`.red);
