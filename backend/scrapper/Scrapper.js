@@ -17,6 +17,7 @@ import TripAdvisorFetcher from "./TripAdvisorFetcher.js";
 import { highlightsBlueprint, promptToScrapeContent } from "./constants.js";
 import { scrapePricesAndDataFromPlatforms } from "../utils/functions.js";
 import AgodaAPIFetcher from "./AgodaAPIFetcher.js";
+import imageSize from "image-size";
 const MAX_IMAGES_SCRAPPABLE = 20;
 class Scrapper {
   constructor(businessData, operationId) {
