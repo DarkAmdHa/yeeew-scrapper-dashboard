@@ -100,7 +100,9 @@ function TripAdvisorAPIData({ tripadvisorData, listingId }) {
                           Details: {offer.details.join(", ")}
                         </div>
                         <a
-                          href={offer.commerceLink}
+                          href={
+                            "https://www.tripadvisor.com" + offer.commerceLink
+                          }
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-blue-400 underline"
