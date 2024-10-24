@@ -1,5 +1,6 @@
 import axios from "axios";
-import { logToConsole } from "../utils/functions.js";
+import { findTypeName, logToConsole } from "../utils/functions.js";
+
 class TripAdvisorFetcher {
   constructor(businessName, entityId) {
     this.businessName = businessName;
@@ -7,6 +8,10 @@ class TripAdvisorFetcher {
     this.reviews = [];
     this.totalReviews = 0;
     this.rating = 0;
+    this.offers = [];
+
+    this.maxIteration = 5;
+    this.currentIteration = 0;
   }
 
   async init() {
@@ -21,6 +26,7 @@ class TripAdvisorFetcher {
           reviews: this.reviews,
           totalReviews: this.totalReviews,
           rating: this.rating,
+          offers: this.offers,
         },
       };
   }
@@ -38,12 +44,12 @@ class TripAdvisorFetcher {
 
     try {
       const { data } = await axios.request(options);
-      if (data.data.length && data.data[0].geoId) {
+      if (data.data.length) {
         this.entityId = data.data[0].geoId;
         if (this.entityId) await this.fetchResortDetails();
       }
     } catch (error) {
-      logToConsole(error);
+      console.error(error);
     }
   }
 
@@ -79,7 +85,8 @@ class TripAdvisorFetcher {
         reviews.length >= 60
       ) {
         data.data.reviews = reviews.filter(
-          (review) => review.__typename == "AppPresentation_ReviewCard"
+          (review) =>
+            review.__typename != "AppPresentation_GAIReviewsSummaryCard"
         );
         finalData = data;
         keepFetching = false;
@@ -163,12 +170,72 @@ class TripAdvisorFetcher {
         this.reviews = this.reviews.slice(0, randomCount);
       }
     } catch (error) {
-      logToConsole(error);
+      console.error(error);
+    }
+  }
+  async fetchOffers(numberOfDaysToAdd = 3) {
+    //For tripadvisor, it takes a little bit of time to get the data after the inital request
+    const now = new Date();
+    try {
+      const options = {
+        method: "GET",
+        url: "https://tripadvisor-com1.p.rapidapi.com/hotels/offers",
+        params: {
+          checkIn: new Date(now.setDate(now.getDate() + numberOfDaysToAdd))
+            .toISOString()
+            .split("T")[0],
+          checkOut: new Date(now.setDate(now.getDate() + numberOfDaysToAdd + 1))
+            .toISOString()
+            .split("T")[0],
+          currency: "AUD",
+          contentId: this.entityId,
+        },
+        headers: {
+          "x-rapidapi-key": process.env.RAPID_API_KEY,
+          "x-rapidapi-host": "tripadvisor-com1.p.rapidapi.com",
+        },
+      };
+
+      const { data } = await axios.request(options);
+      const offersList = findTypeName(
+        data,
+        "AppPresentation_HotelCommerceOfferList"
+      );
+      if (offersList && offersList.isComplete) {
+        const parsedOffers = offersList.offersV2.map((offer) => {
+          return {
+            providerName: offer.providerName,
+            displayPrice: offer.displayPrice
+              ? offer.displayPrice.string
+              : "N/A",
+            details: offer.details.map((detail) => detail.string),
+            status: offer.status,
+            commerceLink: offer.commerceLink
+              ? offer.commerceLink.externalUrl
+              : "N/A",
+          };
+        });
+        this.offers = parsedOffers;
+      } else if (
+        !findTypeName(data, "AppPresentation_HotelCommerceNothingAvailable") &&
+        offersList &&
+        !offersList.isComplete &&
+        this.currentIteration < this.maxIteration
+      ) {
+        this.currentIteration += 1;
+        //The offers are not yet available, so await 10 seconds and try again:
+        await new Promise((resolve, reject) => setTimeout(resolve, 10000));
+        await this.fetchOffers();
+      }
+    } catch (error) {
+      console.error(error);
     }
   }
 
   async fetchResortDetails() {
     await this.fetchReviews();
+    await this.fetchOffers();
   }
 }
+
 export default TripAdvisorFetcher;

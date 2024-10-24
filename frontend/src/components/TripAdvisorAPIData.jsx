@@ -47,7 +47,7 @@ function TripAdvisorAPIData({ tripadvisorData, listingId }) {
   };
 
   return (
-    <div className=" py-6 sm:py-4">
+    <div className="py-6 sm:py-4">
       <div className="grid grid-cols-1 gap-x-2 gap-y-4 sm:grid-cols-6">
         <div className="col-span-6 flex justify-between items-center">
           <div className="block text-2xl font-medium leading-6 text-white">
@@ -81,6 +81,46 @@ function TripAdvisorAPIData({ tripadvisorData, listingId }) {
 
             <APIContent
               content={
+                tripadvisorData.data.offers &&
+                tripadvisorData.data.offers.length > 0 ? (
+                  <ul className="flex flex-col gap-4">
+                    {tripadvisorData.data.offers.map((offer, index) => (
+                      <li
+                        key={`offer-${index}`}
+                        className="p-4 bg-gray-800 text-white rounded-lg"
+                      >
+                        <div className="font-semibold">
+                          {offer.providerName}
+                        </div>
+                        <div className="text-sm">
+                          Price: {offer.displayPrice}
+                        </div>
+                        <div className="text-sm">Status: {offer.status}</div>
+                        <div className="text-sm">
+                          Details: {offer.details.join(", ")}
+                        </div>
+                        <a
+                          href={offer.commerceLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-400 underline"
+                        >
+                          Book Now
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-sm text-white col-span-4">
+                    No room offers found for this business.
+                  </p>
+                )
+              }
+              heading="Rooms/Offers"
+            />
+
+            <APIContent
+              content={
                 <ul className="flex flex-col gap-4">
                   {tripadvisorData.data.reviews &&
                     tripadvisorData.data.reviews.map((review, index) => (
@@ -96,8 +136,8 @@ function TripAdvisorAPIData({ tripadvisorData, listingId }) {
           </>
         ) : (
           <p className="text-sm text-white col-span-4">
-            Looks like no reviews were found for this business. Try refetching
-            the reviews.
+            Looks like no data was found for this business. Try refetching the
+            reviews.
           </p>
         )}
       </div>

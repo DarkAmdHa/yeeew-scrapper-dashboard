@@ -73,6 +73,27 @@ const propertyContentSectionSchema = new mongoose.Schema(
   { _id: false }
 );
 
+const ratePlanSchema = new mongoose.Schema(
+  {
+    available: { type: Boolean },
+    cancellationPolicy: { type: String },
+    price: { type: Number },
+    roomNightMessage: { type: String },
+  },
+  { _id: false }
+);
+
+const roomSchema = new mongoose.Schema(
+  {
+    roomName: { type: String },
+    features: [{ type: String }],
+    description: { type: String },
+    gallery: [{ type: String }],
+    ratePlans: [ratePlanSchema],
+  },
+  { _id: false }
+);
+
 const hotelSchema = new mongoose.Schema(
   {
     id: { type: String },
@@ -82,6 +103,8 @@ const hotelSchema = new mongoose.Schema(
       propertyGallery: [propertyGallerySchema],
       propertyContentSectionGroups: propertyContentSectionSchema,
       coordinates: coordinatesSchema,
+      rooms: [roomSchema],
+      minimumPrice: { type: Number },
     },
   },
   { _id: false }

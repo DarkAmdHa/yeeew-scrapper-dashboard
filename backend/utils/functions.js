@@ -276,7 +276,7 @@ export const scrapePricesAndDataFromPlatforms = async (page) => {
   return scrapedData;
 };
 
-export const logToConsole = (erorr) => {
+export const logToConsole = (error) => {
   if (axios.isAxiosError(error)) {
     if (error.response) {
       console.error("Axios Response Error:");
@@ -290,4 +290,26 @@ export const logToConsole = (erorr) => {
     console.error("General Error:", error.message);
     console.error("Stack Trace:", error.stack);
   }
+};
+
+export const findTypeName = (obj, typename) => {
+  if (obj && obj.__typename == typename) {
+    return obj;
+  }
+
+  if (Array.isArray(obj)) {
+    for (let item of obj) {
+      const found = findTypeName(item, typename);
+      if (found) return found;
+    }
+  } else if (obj && typeof obj == "object") {
+    for (let key in obj) {
+      if (obj.hasOwnProperty(key)) {
+        const found = findTypeName(obj[key], typename);
+        if (found) return found;
+      }
+    }
+  }
+
+  return null;
 };

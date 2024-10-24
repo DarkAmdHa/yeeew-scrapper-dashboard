@@ -3,9 +3,10 @@ import axios from "axios";
 import { logToConsole } from "../utils/functions.js";
 
 class PricelineAPIFetcher {
-  constructor(businessName) {
+  constructor(businessName, entityId) {
     this.businessName = businessName;
-    this.entityId = "";
+    this.entityId = entityId ?? "";
+    this.foundEntities = [];
     this.coordinates = {
       lat: "",
       long: "",
@@ -14,8 +15,10 @@ class PricelineAPIFetcher {
   }
 
   async init() {
-    await this.getBusinessId(this.businessName);
-    console.log(this.description);
+    if (!this.entityId) await this.getBusinessId(this.businessName);
+    else {
+      await this.fetchResortDetails();
+    }
     if (this.entityId)
       return {
         id: this.entityId,
@@ -44,6 +47,8 @@ class PricelineAPIFetcher {
       const { data } = await axios.request(options);
       if (data.length) {
         const relevantHotel = data.find((item) => item.id);
+        //In case this one does not yield data:
+        this.foundEntities = data;
         if (relevantHotel) {
           this.entityId = relevantHotel.id;
           if (relevantHotel.lat && relevantHotel.lon) {
@@ -64,7 +69,7 @@ class PricelineAPIFetcher {
       url: "https://priceline-com-provider.p.rapidapi.com/v1/hotels/details",
       params: {
         offset_of_reviews: "0",
-        hotel_id: +this.entityId,
+        hotel_id: this.entityId,
       },
       headers: {
         "x-rapidapi-key": process.env.RAPID_API_KEY,
@@ -96,6 +101,16 @@ class PricelineAPIFetcher {
       };
       this.description = newData;
     } catch (error) {
+      if (error.response.data.detail == "404") {
+        //The item was not found from the api:
+        const anotherItem = this.foundEntities.find(
+          (item) => item.id && item.id != this.entityId
+        );
+        if (anotherItem) {
+          this.entityId = anotherItem.id;
+          await this.fetchResortDescription();
+        }
+      }
       logToConsole(error);
     }
   }

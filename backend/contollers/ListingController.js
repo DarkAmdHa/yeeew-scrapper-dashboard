@@ -12,6 +12,9 @@ import stream from "stream";
 import Scrapper from "../scrapper/Scrapper.js";
 import TripAdvisorFetcher from "../scrapper/TripAdvisorFetcher.js";
 import AgodaAPIFetcher from "../scrapper/AgodaAPIFetcher.js";
+import HotelsAPIFetcher from "../scrapper/HotelsAPIFetcher.js";
+import BookingAPIFetcher from "../scrapper/BookingAPIFetcher.js";
+import PricelineAPIFetcher from "../scrapper/PricelineAPIFetcher.js";
 const scrapper = new Scrapper();
 
 const upload = multer({
@@ -321,7 +324,7 @@ class ListingController {
 
     try {
       let apiResponse;
-      if (apiListingId) {
+      if (apiListingId && true) {
         //Refetch Reviews:
 
         const reviewsFetcher = new TripAdvisorFetcher(
@@ -366,6 +369,78 @@ class ListingController {
       throw new Error("Something went wrong while refetching reviews");
     }
   });
+
+  refetchAPIData = asyncHandler(async (req, res) => {
+    const { apiListingId, apiHandle } = req.body;
+    const { id } = req.params;
+    if (!id) {
+      res.status(400);
+      throw new Error("Listing ID required");
+    }
+    const apis = {
+      hotels: HotelsAPIFetcher,
+      booking: BookingAPIFetcher,
+      priceline: PricelineAPIFetcher,
+    };
+    if (!apiHandle || !Object.keys(apis).includes(apiHandle)) {
+      res.status(400);
+      throw new Error("Please provide a valid api handle");
+    }
+
+    const business = await Listing.findById(id);
+
+    if (!business) {
+      res.status(404);
+      throw new Error("Listing not found");
+    }
+
+    const APIDataFetcher = apis[apiHandle];
+    try {
+      let apiResponse;
+      //Nevermind, always get fresh data:
+      if (apiListingId && false) {
+        //Refetch data:
+        const dataFetcher = new APIDataFetcher(
+          business.businessName,
+          apiListingId
+        );
+        apiResponse = await dataFetcher.init();
+
+        if (apiResponse.id && apiResponse.data) {
+          business.apiData[apiHandle] = {
+            ...(business.apiData["apiHandle"] &&
+              business.apiData[apiHandle]._doc),
+            ...apiResponse,
+          };
+        }
+      } else {
+        const dataFetcher = new APIDataFetcher(business.businessName);
+        apiResponse = await dataFetcher.init();
+
+        if (apiResponse && apiResponse.id) {
+          business.apiData[apiHandle] = apiResponse;
+        }
+      }
+
+      if (apiResponse && apiResponse.id && apiResponse.data) {
+        await business.save();
+        res.json({
+          found: true,
+          message: "Data Refetched",
+        });
+      } else {
+        res.json({
+          found: false,
+          message: "Data Refetched but no listing for the business was found.",
+        });
+      }
+    } catch (error) {
+      console.log(error);
+      res.status(500);
+      throw new Error("Something went wrong while refetching reviews");
+    }
+  });
+
   refetchAgoda = asyncHandler(async (req, res) => {
     const { customName } = req.body;
     const { id } = req.params;

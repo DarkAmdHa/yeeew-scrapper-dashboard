@@ -566,39 +566,50 @@ export default function BusinessPage() {
 
         <div className="bg-gray-800 shadow-sm ring-1 ring-gray-900/5 sm:rounded-xl md:col-span-2">
           <div className="px-4 py-6 sm:p-8">
-            {changeableListing &&
-              changeableListing.apiData &&
-              changeableListing.apiData.booking && (
-                <BookingAPIData
-                  bookingData={changeableListing.apiData.booking}
-                />
-              )}
-            {changeableListing &&
-              changeableListing.apiData &&
-              changeableListing.apiData.hotels && (
-                <HotelsAPIData hotelsData={changeableListing.apiData.hotels} />
-              )}
-            {changeableListing &&
-              changeableListing.apiData &&
-              changeableListing.apiData.priceline && (
-                <>
-                  <PriceLineAPIData
-                    priceLineData={changeableListing.apiData.priceline}
-                  />
-                </>
-              )}
-            {changeableListing && changeableListing.apiData && (
+            {changeableListing && (
+              <BookingAPIData
+                bookingData={
+                  changeableListing.apiData && changeableListing.apiData.booking
+                }
+                listingId={changeableListing._id}
+              />
+            )}
+            {changeableListing && (
+              <HotelsAPIData
+                hotelsData={
+                  changeableListing.apiData && changeableListing.apiData.hotels
+                }
+                listingId={changeableListing._id}
+              />
+            )}
+            {changeableListing && (
               <>
-                <TripAdvisorAPIData
+                <PriceLineAPIData
+                  priceLineData={
+                    changeableListing.apiData &&
+                    changeableListing.apiData.priceline
+                  }
                   listingId={changeableListing._id}
-                  tripadvisorData={changeableListing.apiData.tripadvisor}
                 />
               </>
             )}
-            {changeableListing && changeableListing.apiData && (
+            {changeableListing && (
+              <>
+                <TripAdvisorAPIData
+                  listingId={changeableListing._id}
+                  tripadvisorData={
+                    changeableListing.apiData &&
+                    changeableListing.apiData.tripadvisor
+                  }
+                />
+              </>
+            )}
+            {changeableListing && (
               <>
                 <AgodaAPIData
-                  agodaData={changeableListing.apiData.agoda}
+                  agodaData={
+                    changeableListing.apiData && changeableListing.apiData.agoda
+                  }
                   listingId={changeableListing._id}
                   listingName={changeableListing.businessName}
                 />

@@ -26,6 +26,14 @@ const reviewSchema = new mongoose.Schema({
   },
 });
 
+const offerSchema = new mongoose.Schema({
+  providerName: { type: String, default: "N/A" },
+  displayPrice: { type: String, default: "N/A" },
+  details: [{ type: String, default: "" }],
+  status: { type: String, default: "" },
+  commerceLink: { type: String, default: "N/A" },
+});
+
 const tripAdvisorAPIDataSchema = new mongoose.Schema(
   {
     id: { type: String, required: true, unique: true },
@@ -33,6 +41,7 @@ const tripAdvisorAPIDataSchema = new mongoose.Schema(
       reviews: [reviewSchema],
       rating: Number,
       totalReviews: Number,
+      offers: [offerSchema],
     },
   },
   { _id: false }
