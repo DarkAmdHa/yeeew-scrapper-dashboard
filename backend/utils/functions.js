@@ -325,5 +325,7 @@ export const findPlatformPrice = (apiData, platform) => {
   const priceObject = apiData.tripadvisor.data.offers.find((offer) =>
     offer.providerName.toLowerCase().includes(platform.toLowerCase())
   );
-  return priceObject;
+  return priceObject && priceObject.displayPrice
+    ? priceObject.displayPrice
+    : null;
 };
