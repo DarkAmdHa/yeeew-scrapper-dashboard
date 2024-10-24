@@ -820,7 +820,9 @@ class Export {
             listing_url: this.businessData.apiData.agoda.data.url
               ? this.businessData.apiData.agoda.data.url
               : null,
-            ...(agodaPrice && { package_price: String(agodaPrice) }),
+            ...(agodaPrice && {
+              listing_actual_price_per_day: String(agodaPrice),
+            }),
           });
         }
         if (this.businessData.apiData.tripadvisor) {
@@ -842,7 +844,9 @@ class Export {
             affiliate_name: 1875,
             api_id: "https://hotels-com-provider.p.rapidapi.com",
             affiliate_id: this.businessData.apiData.hotels.id,
-            ...(hotelsPrice && { package_price: String(hotelsPrice) }),
+            ...(hotelsPrice && {
+              listing_actual_price_per_day: String(hotelsPrice),
+            }),
           });
         }
         if (this.businessData.apiData.priceline) {
@@ -854,7 +858,9 @@ class Export {
             affiliate_name: 3883,
             api_id: "https://priceline-com-provider.p.rapidapi.com",
             affiliate_id: this.businessData.apiData.priceline.id,
-            ...(pricelinePrice && { package_price: String(pricelinePrice) }),
+            ...(pricelinePrice && {
+              listing_actual_price_per_day: String(pricelinePrice),
+            }),
           });
         }
         if (this.businessData.apiData.booking) {
@@ -869,7 +875,9 @@ class Export {
             affiliate_name: 1866,
             api_id: "https://booking-com15.p.rapidapi.com",
             affiliate_id: this.businessData.apiData.booking.id,
-            ...(bookingPrice && { package_price: String(bookingPrice) }),
+            ...(bookingPrice && {
+              listing_actual_price_per_day: String(bookingPrice),
+            }),
           });
         }
       }
