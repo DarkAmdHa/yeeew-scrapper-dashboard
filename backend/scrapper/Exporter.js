@@ -807,17 +807,17 @@ class Export {
       }
 
       if (this.businessData.apiData) {
-        if (this.businessData.apiData.agoda) {
-          const agodaPrice = findPlatformPrice(
-            this.businessData.apiData,
-            "agoda"
-          );
+        const agodaPrice = findPlatformPrice(
+          this.businessData.apiData,
+          "agoda"
+        );
+        if (this.businessData.apiData.agoda || agodaPrice) {
           affiliates.push({
             affiliate_name: 1867,
-            affiliate_id: this.businessData.apiData.agoda.id
+            affiliate_id: this.businessData.apiData.agoda?.id
               ? this.businessData.apiData.agoda.id
               : null,
-            listing_url: this.businessData.apiData.agoda.data.url
+            listing_url: this.businessData.apiData.agoda?.data?.url
               ? this.businessData.apiData.agoda.data.url
               : null,
             ...(agodaPrice && {
@@ -881,6 +881,19 @@ class Export {
             ...(bookingPrice && {
               listing_actual_price_per_day: String(bookingPrice),
             }),
+          });
+        }
+
+        //if we're getting the trip.com price from the TripAdvisor API:
+        const tripPrice = findPlatformPrice(
+          this.businessData.apiData,
+          "Trip.com"
+        );
+        if (tripPrice) {
+          affiliates.push({
+            affiliate_name: 3881,
+
+            listing_actual_price_per_day: String(tripPrice),
           });
         }
       }
