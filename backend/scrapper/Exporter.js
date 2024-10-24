@@ -875,6 +875,9 @@ class Export {
             affiliate_name: 1866,
             api_id: "https://booking-com15.p.rapidapi.com",
             affiliate_id: this.businessData.apiData.booking.id,
+            ...(this.businessData?.apiData?.booking?.data?.details?.url && {
+              listing_url: this.businessData.apiData.booking.data.details.url,
+            }),
             ...(bookingPrice && {
               listing_actual_price_per_day: String(bookingPrice),
             }),
