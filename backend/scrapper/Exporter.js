@@ -11,7 +11,7 @@ import {
 import fetch from "node-fetch";
 import FormData from "form-data";
 import Listing from "../models/listingModel.js";
-import { formatDate } from "../utils/functions.js";
+import { findPlatformPrice, formatDate } from "../utils/functions.js";
 
 class Export {
   constructor(businessData, operationId) {
@@ -808,6 +808,10 @@ class Export {
 
       if (this.businessData.apiData) {
         if (this.businessData.apiData.agoda) {
+          const agodaPrice = findPlatformPrice(
+            this.businessData.apiData,
+            "agoda"
+          );
           affiliates.push({
             affiliate_name: 1867,
             affiliate_id: this.businessData.apiData.agoda.id
@@ -816,6 +820,7 @@ class Export {
             listing_url: this.businessData.apiData.agoda.data.url
               ? this.businessData.apiData.agoda.data.url
               : null,
+            ...(agodaPrice && { package_price: String(agodaPrice) }),
           });
         }
         if (this.businessData.apiData.tripadvisor) {
@@ -826,24 +831,45 @@ class Export {
           });
         }
         if (this.businessData.apiData.hotels) {
+          const hotelsPrice = findPlatformPrice(
+            this.businessData.apiData,
+            "hotels"
+          )
+            ? findPlatformPrice(this.businessData.apiData, "hotels")
+            : this.businessData.apiData.hotels.data.minimumPrice;
+
           affiliates.push({
             affiliate_name: 1875,
             api_id: "https://hotels-com-provider.p.rapidapi.com",
             affiliate_id: this.businessData.apiData.hotels.id,
+            ...(hotelsPrice && { package_price: String(hotelsPrice) }),
           });
         }
         if (this.businessData.apiData.priceline) {
+          const pricelinePrice = findPlatformPrice(
+            this.businessData.apiData,
+            "priceline"
+          );
           affiliates.push({
             affiliate_name: 3883,
             api_id: "https://priceline-com-provider.p.rapidapi.com",
             affiliate_id: this.businessData.apiData.priceline.id,
+            ...(pricelinePrice && { package_price: String(pricelinePrice) }),
           });
         }
         if (this.businessData.apiData.booking) {
+          const bookingPrice = findPlatformPrice(
+            this.businessData.apiData,
+            "booking"
+          )
+            ? findPlatformPrice(this.businessData.apiData, "booking")
+            : this.businessData.apiData.booking.data.details?.price
+                ?.grossAmountPerNight || null;
           affiliates.push({
             affiliate_name: 1866,
             api_id: "https://booking-com15.p.rapidapi.com",
             affiliate_id: this.businessData.apiData.booking.id,
+            ...(bookingPrice && { package_price: String(bookingPrice) }),
           });
         }
       }

@@ -313,3 +313,17 @@ export const findTypeName = (obj, typename) => {
 
   return null;
 };
+
+export const findPlatformPrice = (apiData, platform) => {
+  if (
+    !apiData.tripadvisor ||
+    !apiData.tripadvisor.data ||
+    !apiData.tripadvisor.data.offers
+  )
+    return null;
+
+  const priceObject = apiData.tripadvisor.data.offers.find((offer) =>
+    offer.providerName.toLowerCase().includes(platform.toLowerCase())
+  );
+  return priceObject;
+};
