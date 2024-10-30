@@ -18,15 +18,16 @@ import { highlightsBlueprint, promptToScrapeContent } from "./constants.js";
 import { scrapePricesAndDataFromPlatforms } from "../utils/functions.js";
 import AgodaAPIFetcher from "./AgodaAPIFetcher.js";
 import imageSize from "image-size";
+import PricesExporter from "./PricesExporter.js";
 const MAX_IMAGES_SCRAPPABLE = 20;
 class Scrapper {
-  constructor(businessData, operationId) {
+  constructor(businessData, operationId, refetchingPrices = false) {
     this.businessData = businessData;
     this.operationId = operationId;
-    this.scrapedData = {};
+    this.scrapedData = { data: {} };
     this.operationStatus = "";
     this.enoughData = false;
-
+    this.refetchingPrices = refetchingPrices;
     this.totalImagesScrapped = 0;
   }
 
@@ -44,6 +45,17 @@ class Scrapper {
           );
         }
         await this.updateOperation();
+
+        //If this is a refetching of prices operation, initiate an export operation to make sure prices are then updated correctly on both Yeeew:
+        if (
+          this.refetchingPrices &&
+          (this.businessData.listingObject.yeeewPostId ||
+            this.businessData.listingObject.yeeewDevPostId)
+        ) {
+          //Export to existing Yeeew Posts:
+          const priceExporter = new PricesExporter(this.businessData);
+          await priceExporter.init();
+        }
         console.log(this.scrapedData);
       }
     } catch (error) {
@@ -58,28 +70,30 @@ class Scrapper {
   }
 
   async processBusinessData() {
-    this.scrapedData = await this.scrapeBusinessSite(
-      this.businessData.businessName,
-      this.businessData.businessURL
-    );
-    this.scrapedData = await this.scrapeDataFromGoogle(
-      this.businessData.businessName,
-      this.businessData.businessLocation,
-      this.scrapedData
-    );
+    if (!this.refetchingPrices) {
+      this.scrapedData = await this.scrapeBusinessSite(
+        this.businessData.businessName,
+        this.businessData.businessURL
+      );
+      this.scrapedData = await this.scrapeDataFromGoogle(
+        this.businessData.businessName,
+        this.businessData.businessLocation,
+        this.scrapedData
+      );
+    }
 
     this.scrapedData = await this.scrapePlatforms(
       this.businessData,
       this.scrapedData
     );
-    if (process.env.NODE_ENV != "development") {
+    if (process.env.NODE_ENV != "development" || this.refetchingPrices) {
       this.scrapedData = await this.scrapeFromBookingAPI();
       this.scrapedData = await this.scrapeFromPricelineAPI();
       this.scrapedData = await this.scrapeFromHotelsAPI();
+      this.scrapedData = await this.scrapeFromTripAdvisor();
+      this.scrapedData = await this.getAgodaData();
     }
-    this.scrapedData = await this.scrapeFromTripAdvisor();
-    this.scrapedData = await this.getAgodaData();
-    if (this.listingHasEnoughData(this.scrapedData)) {
+    if (this.listingHasEnoughData(this.scrapedData) && !this.refetchingPrices) {
       //Only proceed if enough data was gathered
       this.scrapedData = await this.generateFinalContent(
         this.businessData,
@@ -300,191 +314,310 @@ class Scrapper {
   }
 
   setupBusinessDocumentUpdate(listing, data) {
-    listing.email = data.contact_email || "";
-    listing.phoneNumber = data.phone_number || "";
-    listing.whatsappNumber = data.whatsapp_number || "";
-    listing.contactName = data.contact_name || "";
-    listing.address = data.location
-      ? data.googleAddress
-      : data.location
-      ? data.location
-      : "";
-    listing.summary = data.summary || "";
-    listing.customSlug = data.slug || "";
-
-    if (data.googleLatitude && data.googleLongitude) {
-      listing.longitude = data.googleLongitude;
-      listing.latitude = data.googleLatitude;
-    } else if (data.coordinates) {
-      listing.longitude = data.coordinates.lng || "";
-      listing.latitude = data.coordinates.lat || "";
-    }
-
-    //Accomodation Types As array:
-    if (data.accomodation_type) {
-      listing.accommodationType = data.accomodation_type.split(",");
-    }
-    if (data.trip_type) {
-      listing.tripType = data.trip_type.split(",");
-    }
-
-    listing.apiData = {};
-    if (data.apiData) {
-      if (data.apiData.booking) {
-        listing.apiData.booking = data.apiData.booking;
-      }
-      if (data.apiData.priceline) {
-        listing.apiData.priceline = data.apiData.priceline;
-      }
-      if (data.apiData.hotels) {
-        listing.apiData.hotels = data.apiData.hotels;
-      }
-      if (data.apiData.tripadvisor) {
-        listing.apiData.tripadvisor = data.apiData.tripadvisor;
-      }
-    }
-
-    console.log(JSON.stringify(this.scrapedData));
-
-    if (data.platformSummaries && data.platformSummaries["bookingData"]) {
-      const bookingData = data.platformSummaries.bookingData;
-      listing.roomsFromBooking = bookingData.rooms;
-      listing.propertyAmenitiesFromBooking = bookingData.amenities;
-      listing.propertySurroundingsFromBooking = bookingData.surroundings;
-    }
-
-    //Content Save:
-    if (data.content) {
-      listing.overview = data.content.overview || "";
-      listing.aboutAccomodation = data.content.aboutAccomodation || "";
-      listing.foodInclusions = data.content.foodInclusions || "";
-      listing.specificSurfSpots = data.content.specificSurfSpots || "";
-      listing.gettingThere = data.content.gettingThere || "";
-      listing.faq = data.content.faq || [];
-
-      if (data.content.highlights) {
-        if (typeof data.content.highlights == "string")
-          listing.highlightsAndTopAmenities =
-            data.content.highlights.split(";");
-        else listing.highlightsAndTopAmenities = data.content.highlights;
-      }
-    }
-
-    if (data.platformSummaries) {
-      let scrapedImagesArray = [];
-      var dataToProcess = [
-        {
-          data: data.platformSummaries["perfectWaveData"],
-          name: "perfectWave",
-        },
-        {
-          data: data.platformSummaries["luexData"],
-          name: "luex",
-        },
-        {
-          data: data.platformSummaries["waterWaysTravelData"],
-          name: "waterways",
-        },
-        {
-          data: data.platformSummaries["worldSurfarisData"],
-          name: "worldSurfaris",
-        },
-        {
-          data: data.platformSummaries["awaveData"],
-          name: "awave",
-        },
-        {
-          data: data.platformSummaries["atollTravelData"],
-          name: "atollTravel",
-        },
-        {
-          data: data.platformSummaries["surfHolidaysData"],
-          name: "surfHolidays",
-        },
-        {
-          data: data.platformSummaries["surflineData"],
-          name: "surfline",
-        },
-        {
-          data: data.platformSummaries["lushPalmData"],
-          name: "lushPalm",
-        },
-        {
-          data: data.platformSummaries["thermalTravelData"],
-          name: "thermal",
-        },
-        {
-          data: data.platformSummaries["bookSurfCampsData"],
-          name: "bookSurfCamps",
-        },
-        {
-          data: data.platformSummaries["nomadSurfersData"],
-          name: "nomadSurfers",
-        },
-        {
-          data: data.platformSummaries["stokedSurfAdventuresData"],
-          name: "stokedSurfAdventures",
-        },
-        {
-          data: data.platformSummaries["soulSurfTravelData"],
-          name: "soulSurfTravel",
-        },
-        {
-          data: data.platformSummaries["surfersHypeData"],
-          name: "surfersHype",
-        },
-        {
-          data: data.platformSummaries["trivagoData"],
-          name: "trivago",
-        },
-        {
-          data: data.platformSummaries["agodaData"],
-          name: "agoda",
-        },
-        {
-          data: data.platformSummaries["expediaData"],
-          name: "expedia",
-        },
-
-        {
-          data: data.platformSummaries["tripData"],
-          name: "trip",
-        },
-        {
-          data: data.platformSummaries["bookingData"],
-          name: "booking",
-        },
-      ];
-
-      //Images from main site:
-      if (data.imagesFromMain) {
-        scrapedImagesArray.push(...data.imagesFromMain);
-      }
-
-      // Loop through the array and process the data
-      dataToProcess.forEach(function (item) {
-        if (item.data) {
-          listing[item.name] = {
-            highlights: item.data.highlights ? item.data.highlights : "",
-            summary: item.data.textContent ? item.data.textContent : "",
-            minimum_price: item.data.minimum_price
-              ? item.data.minimum_price
-              : "",
-            nights: item.data.nights ? item.data.nights : "",
-            currency: item.data.currency ? item.data.currency : "",
-            link: item.data.link ? item.data.link : "",
-            content: item.data.content ? item.data.content : "",
-          };
-          if (item.data.images) {
-            scrapedImagesArray.push(...item.data.images);
-          }
+    if (this.refetchingPrices) {
+      listing.apiData = listing.apiData || {};
+      if (data.apiData) {
+        if (data.apiData.booking) {
+          listing.apiData.booking = data.apiData.booking;
         }
-      });
+        if (data.apiData.priceline) {
+          listing.apiData.priceline = data.apiData.priceline;
+        }
+        if (data.apiData.hotels) {
+          listing.apiData.hotels = data.apiData.hotels;
+        }
+        if (data.apiData.tripadvisor) {
+          listing.apiData.tripadvisor = data.apiData.tripadvisor;
+        }
+      }
 
-      // console.log(scrapedImagesArray);
-      listing.scrapedImages = scrapedImagesArray;
-      return listing;
+      if (data.platformSummaries) {
+        var dataToProcess = [
+          {
+            data: data.platformSummaries["perfectWaveData"],
+            name: "perfectWave",
+          },
+          {
+            data: data.platformSummaries["luexData"],
+            name: "luex",
+          },
+          {
+            data: data.platformSummaries["waterWaysTravelData"],
+            name: "waterways",
+          },
+          {
+            data: data.platformSummaries["worldSurfarisData"],
+            name: "worldSurfaris",
+          },
+          {
+            data: data.platformSummaries["awaveData"],
+            name: "awave",
+          },
+          {
+            data: data.platformSummaries["atollTravelData"],
+            name: "atollTravel",
+          },
+          {
+            data: data.platformSummaries["surfHolidaysData"],
+            name: "surfHolidays",
+          },
+          {
+            data: data.platformSummaries["surflineData"],
+            name: "surfline",
+          },
+          {
+            data: data.platformSummaries["lushPalmData"],
+            name: "lushPalm",
+          },
+          {
+            data: data.platformSummaries["thermalTravelData"],
+            name: "thermal",
+          },
+          {
+            data: data.platformSummaries["bookSurfCampsData"],
+            name: "bookSurfCamps",
+          },
+          {
+            data: data.platformSummaries["nomadSurfersData"],
+            name: "nomadSurfers",
+          },
+          {
+            data: data.platformSummaries["stokedSurfAdventuresData"],
+            name: "stokedSurfAdventures",
+          },
+          {
+            data: data.platformSummaries["soulSurfTravelData"],
+            name: "soulSurfTravel",
+          },
+          {
+            data: data.platformSummaries["surfersHypeData"],
+            name: "surfersHype",
+          },
+          {
+            data: data.platformSummaries["trivagoData"],
+            name: "trivago",
+          },
+          {
+            data: data.platformSummaries["agodaData"],
+            name: "agoda",
+          },
+          {
+            data: data.platformSummaries["expediaData"],
+            name: "expedia",
+          },
+
+          {
+            data: data.platformSummaries["tripData"],
+            name: "trip",
+          },
+          {
+            data: data.platformSummaries["bookingData"],
+            name: "booking",
+          },
+        ];
+
+        // Loop through the array and process the data
+        dataToProcess.forEach(function (item) {
+          if (item.data) {
+            listing[item.name] = {
+              highlights: item.data.highlights ? item.data.highlights : "",
+              summary: item.data.textContent ? item.data.textContent : "",
+              minimum_price: item.data.minimum_price
+                ? item.data.minimum_price
+                : "",
+              nights: item.data.nights ? item.data.nights : "",
+              currency: item.data.currency ? item.data.currency : "",
+              link: item.data.link ? item.data.link : "",
+              content: item.data.content ? item.data.content : "",
+            };
+          }
+        });
+      }
+    } else {
+      listing.email = data.contact_email || "";
+      listing.phoneNumber = data.phone_number || "";
+      listing.whatsappNumber = data.whatsapp_number || "";
+      listing.contactName = data.contact_name || "";
+      listing.address = data.location
+        ? data.googleAddress
+        : data.location
+        ? data.location
+        : "";
+      listing.summary = data.summary || "";
+      listing.customSlug = data.slug || "";
+
+      if (data.googleLatitude && data.googleLongitude) {
+        listing.longitude = data.googleLongitude;
+        listing.latitude = data.googleLatitude;
+      } else if (data.coordinates) {
+        listing.longitude = data.coordinates.lng || "";
+        listing.latitude = data.coordinates.lat || "";
+      }
+
+      //Accomodation Types As array:
+      if (data.accomodation_type) {
+        listing.accommodationType = data.accomodation_type.split(",");
+      }
+      if (data.trip_type) {
+        listing.tripType = data.trip_type.split(",");
+      }
+
+      listing.apiData = {};
+      if (data.apiData) {
+        if (data.apiData.booking) {
+          listing.apiData.booking = data.apiData.booking;
+        }
+        if (data.apiData.priceline) {
+          listing.apiData.priceline = data.apiData.priceline;
+        }
+        if (data.apiData.hotels) {
+          listing.apiData.hotels = data.apiData.hotels;
+        }
+        if (data.apiData.tripadvisor) {
+          listing.apiData.tripadvisor = data.apiData.tripadvisor;
+        }
+      }
+
+      if (data.platformSummaries && data.platformSummaries["bookingData"]) {
+        const bookingData = data.platformSummaries.bookingData;
+        listing.roomsFromBooking = bookingData.rooms;
+        listing.propertyAmenitiesFromBooking = bookingData.amenities;
+        listing.propertySurroundingsFromBooking = bookingData.surroundings;
+      }
+
+      //Content Save:
+      if (data.content) {
+        listing.overview = data.content.overview || "";
+        listing.aboutAccomodation = data.content.aboutAccomodation || "";
+        listing.foodInclusions = data.content.foodInclusions || "";
+        listing.specificSurfSpots = data.content.specificSurfSpots || "";
+        listing.gettingThere = data.content.gettingThere || "";
+        listing.faq = data.content.faq || [];
+
+        if (data.content.highlights) {
+          if (typeof data.content.highlights == "string")
+            listing.highlightsAndTopAmenities =
+              data.content.highlights.split(";");
+          else listing.highlightsAndTopAmenities = data.content.highlights;
+        }
+      }
+
+      if (data.platformSummaries) {
+        let scrapedImagesArray = [];
+        var dataToProcess = [
+          {
+            data: data.platformSummaries["perfectWaveData"],
+            name: "perfectWave",
+          },
+          {
+            data: data.platformSummaries["luexData"],
+            name: "luex",
+          },
+          {
+            data: data.platformSummaries["waterWaysTravelData"],
+            name: "waterways",
+          },
+          {
+            data: data.platformSummaries["worldSurfarisData"],
+            name: "worldSurfaris",
+          },
+          {
+            data: data.platformSummaries["awaveData"],
+            name: "awave",
+          },
+          {
+            data: data.platformSummaries["atollTravelData"],
+            name: "atollTravel",
+          },
+          {
+            data: data.platformSummaries["surfHolidaysData"],
+            name: "surfHolidays",
+          },
+          {
+            data: data.platformSummaries["surflineData"],
+            name: "surfline",
+          },
+          {
+            data: data.platformSummaries["lushPalmData"],
+            name: "lushPalm",
+          },
+          {
+            data: data.platformSummaries["thermalTravelData"],
+            name: "thermal",
+          },
+          {
+            data: data.platformSummaries["bookSurfCampsData"],
+            name: "bookSurfCamps",
+          },
+          {
+            data: data.platformSummaries["nomadSurfersData"],
+            name: "nomadSurfers",
+          },
+          {
+            data: data.platformSummaries["stokedSurfAdventuresData"],
+            name: "stokedSurfAdventures",
+          },
+          {
+            data: data.platformSummaries["soulSurfTravelData"],
+            name: "soulSurfTravel",
+          },
+          {
+            data: data.platformSummaries["surfersHypeData"],
+            name: "surfersHype",
+          },
+          {
+            data: data.platformSummaries["trivagoData"],
+            name: "trivago",
+          },
+          {
+            data: data.platformSummaries["agodaData"],
+            name: "agoda",
+          },
+          {
+            data: data.platformSummaries["expediaData"],
+            name: "expedia",
+          },
+
+          {
+            data: data.platformSummaries["tripData"],
+            name: "trip",
+          },
+          {
+            data: data.platformSummaries["bookingData"],
+            name: "booking",
+          },
+        ];
+
+        //Images from main site:
+        if (data.imagesFromMain) {
+          scrapedImagesArray.push(...data.imagesFromMain);
+        }
+
+        // Loop through the array and process the data
+        dataToProcess.forEach(function (item) {
+          if (item.data) {
+            listing[item.name] = {
+              highlights: item.data.highlights ? item.data.highlights : "",
+              summary: item.data.textContent ? item.data.textContent : "",
+              minimum_price: item.data.minimum_price
+                ? item.data.minimum_price
+                : "",
+              nights: item.data.nights ? item.data.nights : "",
+              currency: item.data.currency ? item.data.currency : "",
+              link: item.data.link ? item.data.link : "",
+              content: item.data.content ? item.data.content : "",
+            };
+            if (item.data.images) {
+              scrapedImagesArray.push(...item.data.images);
+            }
+          }
+        });
+
+        // console.log(scrapedImagesArray);
+        listing.scrapedImages = scrapedImagesArray;
+      }
     }
+    return listing;
   }
 
   async updateOperationStatus() {
@@ -1495,7 +1628,7 @@ class Scrapper {
 
     const businessName = originalData.businessName;
     const businessLocation = originalData.businessLocation;
-    businessData.data.scrapeImages = true;
+    businessData.data.scrapeImages = this.refetchingPrices ? false : true;
     businessData.data.platformSummaries = {};
 
     const links = {

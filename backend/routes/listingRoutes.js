@@ -18,6 +18,7 @@ router.post("/delete-listings", protect, ListingController.deleteListings);
 router.post("/:id/refetchReviews", protect, ListingController.refetchReviews);
 router.post("/:id/refetchAgoda", protect, ListingController.refetchAgoda);
 router.post("/:id/refetch-api-data", protect, ListingController.refetchAPIData);
+router.post("/:id/refetch-prices", protect, ListingController.refetchPrices);
 
 router.get("/:id", protect, ListingController.getListing);
 

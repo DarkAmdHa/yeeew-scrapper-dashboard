@@ -1,5 +1,6 @@
 import axios from "axios";
 import { findTypeName, logToConsole } from "../utils/functions.js";
+import pt from "puppeteer";
 
 class TripAdvisorFetcher {
   constructor(businessName, entityId) {
@@ -12,6 +13,7 @@ class TripAdvisorFetcher {
 
     this.maxIteration = 5;
     this.currentIteration = 0;
+    this.webUrl = "";
   }
 
   async init() {
@@ -27,6 +29,7 @@ class TripAdvisorFetcher {
           totalReviews: this.totalReviews,
           rating: this.rating,
           offers: this.offers,
+          webUrl: this.webUrl,
         },
       };
   }
@@ -97,6 +100,40 @@ class TripAdvisorFetcher {
     }
 
     return finalData;
+  }
+
+  async fetchDetails(numberOfDaysToAdd = 3) {
+    const now = new Date();
+
+    const params = {
+      contentId: this.entityId,
+      checkIn: new Date(now.setDate(now.getDate() + numberOfDaysToAdd))
+        .toISOString()
+        .split("T")[0],
+      checkOut: new Date(now.setDate(now.getDate() + numberOfDaysToAdd + 1))
+        .toISOString()
+        .split("T")[0],
+    };
+    const options = {
+      method: "GET",
+      url: "https://tripadvisor-com1.p.rapidapi.com/hotels/details",
+      params,
+      headers: {
+        "x-rapidapi-key": process.env.RAPID_API_KEY,
+        "x-rapidapi-host": "tripadvisor-com1.p.rapidapi.com",
+      },
+    };
+
+    const { data } = await axios.request(options);
+    let webUrl = "";
+    if (
+      data.data &&
+      data.data.container &&
+      data.data.container.shareInfo &&
+      data.data.container.shareInfo.webUrl
+    )
+      webUrl = data.data.container.shareInfo.webUrl;
+    this.webUrl = webUrl;
   }
 
   async fetchReviews() {
@@ -184,7 +221,7 @@ class TripAdvisorFetcher {
           checkIn: new Date(now.setDate(now.getDate() + numberOfDaysToAdd))
             .toISOString()
             .split("T")[0],
-          checkOut: new Date(now.setDate(now.getDate() + numberOfDaysToAdd + 1))
+          checkOut: new Date(now.setDate(now.getDate() + 1))
             .toISOString()
             .split("T")[0],
           currency: "AUD",
@@ -216,8 +253,10 @@ class TripAdvisorFetcher {
           };
         });
         this.offers = parsedOffers;
+
+        //Parse links and get main listing url:
+        this.getListingURL(parsedOffers);
       } else if (
-        !findTypeName(data, "AppPresentation_HotelCommerceNothingAvailable") &&
         offersList &&
         !offersList.isComplete &&
         this.currentIteration < this.maxIteration
@@ -232,8 +271,35 @@ class TripAdvisorFetcher {
     }
   }
 
+  async getListingURL() {
+    try {
+      const browser = await pt.launch();
+      const page = await browser.newPage();
+      await page.setViewport({ width: 1000, height: 500 });
+
+      try {
+        await page.goto(link, {
+          waitUntil: "networkidle2",
+          timeout: args && args.timeout ? args.timeout : 30000,
+        });
+      } catch (error) {
+        console.log(error);
+
+        const bodyContent = await page.evaluate(() =>
+          document.body.innerText.trim()
+        );
+
+        if (bodyContent.length === 0) {
+          await browser.close();
+          throw error;
+        }
+      }
+    } catch (error) {}
+  }
+
   async fetchResortDetails() {
     await this.fetchReviews();
+    await this.fetchDetails();
     await this.fetchOffers();
   }
 }

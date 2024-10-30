@@ -15,6 +15,7 @@ import AgodaAPIFetcher from "../scrapper/AgodaAPIFetcher.js";
 import HotelsAPIFetcher from "../scrapper/HotelsAPIFetcher.js";
 import BookingAPIFetcher from "../scrapper/BookingAPIFetcher.js";
 import PricelineAPIFetcher from "../scrapper/PricelineAPIFetcher.js";
+import Operation from "../models/operationModel.js";
 const scrapper = new Scrapper();
 
 const upload = multer({
@@ -438,6 +439,62 @@ class ListingController {
       console.log(error);
       res.status(500);
       throw new Error("Something went wrong while refetching reviews");
+    }
+  });
+  refetchPrices = asyncHandler(async (req, res) => {
+    //Refetch all the prices for this listing:
+
+    //This will entail going through all the Scrapper process but only for the platforms
+    //And also refetch all the APIs data:
+
+    const { id } = req.params;
+    if (!id) {
+      res.status(400);
+      throw new Error("Listing ID required");
+    }
+
+    const business = await Listing.findById(id);
+
+    if (!business) {
+      res.status(404);
+      throw new Error("Listing not found");
+    }
+
+    try {
+      const runningOperation = await Operation.findOne({
+        status: "running",
+      });
+
+      const newOperation = await Operation.create({
+        type: "Scrape",
+        listings: [business._id],
+        totalListings: 1,
+        status: "queued",
+        initiatedBy: req.user._id,
+      });
+      res.status(201).json({ message: "Operation initiated" });
+
+      if (!runningOperation) {
+        //No running operations:
+
+        const data = {
+          businessName: business.businessName,
+          businessLocation: business.businessLocation
+            ? business.businessLocation
+            : "",
+          businessURL: business.businessURL ? business.businessURL : "",
+          _id: business._id,
+          data: {},
+          listingObject: business,
+        };
+
+        const scrapper = new Scrapper(data, newOperation._id, true);
+        await scrapper.init();
+      }
+    } catch (error) {
+      console.log(error);
+      res.status(500);
+      throw new Error("Something went wrong while refetching prices");
     }
   });
 

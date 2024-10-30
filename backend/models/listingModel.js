@@ -617,7 +617,12 @@ const ListingSchema = mongoose.Schema(
       type: Boolean,
       default: false,
     },
-    exportLinks: [{ type: String }],
+    yeeewDevPostId: {
+      type: String,
+    },
+    yeeewPostId: {
+      type: String,
+    },
     scrapedAt: {
       type: Date,
     },

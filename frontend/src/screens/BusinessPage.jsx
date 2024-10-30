@@ -16,6 +16,8 @@ import BookingAPIData from "../components/BookingAPIData";
 import PriceLineAPIData from "../components/PriceLineAPIData";
 import TripAdvisorAPIData from "../components/TripAdvisorAPIData";
 import AgodaAPIData from "../components/AgodaAPIData";
+import axios from "axios";
+import Spinner from "../components/Spinner";
 
 const initialState = {
   businessName: "",
@@ -47,6 +49,7 @@ export default function BusinessPage() {
   const [listing, setListing] = useState(initialState);
   const [changeableListing, setChangeableListing] = useState(initialState);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefetchingPrices, setIsRefetchingPrices] = useState(false);
 
   useEffect(() => {
     const id = params.id;
@@ -71,6 +74,38 @@ export default function BusinessPage() {
 
     fetchListing();
   }, [params, token]);
+
+  const handlePriceUpdate = async (e) => {
+    e.preventDefault();
+    if (isRefetchingPrices) return;
+    setIsRefetchingPrices(true);
+    const id = params.id;
+    try {
+      const { data } = await axios.post(
+        `/api/listing/${id}/refetch-prices`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (data.message) {
+        toast.success(data.message);
+      }
+    } catch (error) {
+      console.error("Listing's prices could not be refetched");
+      toast.error(
+        error.response && error.response.data.message
+          ? error.response.data.message
+          : "Listing's prices could not be refetched"
+      );
+    } finally {
+      setIsRefetchingPrices(false);
+    }
+  };
 
   const [platformForm, setPlatformForm] = useState({
     bookingUrl: "",
@@ -131,28 +166,52 @@ export default function BusinessPage() {
                 </div>
               )}
 
-              {changeableListing.exportLinks &&
-              changeableListing.exportLinks.length ? (
+              {changeableListing.scraped && (
+                <div className="sm:col-span-4">
+                  <button
+                    onClick={handlePriceUpdate}
+                    disabled={isRefetchingPrices}
+                    className=" btn btn-primary p-2 rounded flex items-center  gap-1 font-semibold transition hover:bg-green-800 bg-green-700 text-white"
+                  >
+                    {isRefetchingPrices && (
+                      <Spinner width="w-4" height="h-4" border="border-2" />
+                    )}
+                    Update Prices
+                  </button>
+                </div>
+              )}
+
+              {changeableListing.yeeewPostId && (
                 <div className="sm:col-span-4">
                   <div className="block text-md font-medium leading-6 text-white">
                     Yeeew! Listing
                   </div>
-                  <ul className=" list-none mt-1">
-                    {changeableListing.exportLinks.map((link, index) => (
-                      <li key={link + "-" + index}>
-                        <a
-                          href={link}
-                          target="_blank"
-                          className="text-blue-500 underline text-xs"
-                        >
-                          {link}
-                        </a>
-                      </li>
-                    ))}
-                  </ul>
+                  <div className="mt-1">
+                    <a
+                      href={`https://www.yeeew.com/wp-admin/post.php?post=${changeableListing.yeeewPostId}&action=edit`}
+                      target="_blank"
+                      className="text-blue-500 underline text-xs"
+                    >
+                      {`https://www.yeeew.com/wp-admin/post.php?post=${changeableListing.yeeewPostId}&action=edit`}
+                    </a>
+                  </div>
                 </div>
-              ) : (
-                ""
+              )}
+              {changeableListing.yeeewDevPostId && (
+                <div className="sm:col-span-4">
+                  <div className="block text-md font-medium leading-6 text-white">
+                    Yeeew! Dev Site Listing
+                  </div>
+                  <div className="mt-1">
+                    <a
+                      href={`https://yeewdev3.wpengine.com/wp-admin/post.php?post=${changeableListing.yeeewDevPostId}&action=edit`}
+                      target="_blank"
+                      className="text-blue-500 underline text-xs"
+                    >
+                      {`https://yeewdev3.wpengine.com/wp-admin/post.php?post=${changeableListing.yeeewDevPostId}&action=edit`}
+                    </a>
+                  </div>
+                </div>
               )}
               <div className="sm:col-span-4">
                 <label

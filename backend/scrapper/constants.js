@@ -7661,6 +7661,7 @@ export const handlePriceScrape = () => {
         .innerText.toLowerCase()
         .replace("us$ ", "");
     }
+    minimum_price += " USD";
 
     return { minimum_price };
   };
@@ -7709,7 +7710,7 @@ export const handlePriceScrape = () => {
           priceText = priceText.replace(/[^0-9.]/g, ""); // Remove non-numeric characters
 
           // Convert to a number and add to the prices array
-          const price = parseFloat(priceText);
+          const price = parseFloat(priceText) + " USD";
           prices.push(price);
         }
       }

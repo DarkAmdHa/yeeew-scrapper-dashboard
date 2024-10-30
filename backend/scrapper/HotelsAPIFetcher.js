@@ -215,6 +215,7 @@ class HotelsAPIFetcher {
 
   async fetchResortOffers(numberOfDaysToAdd = 3) {
     const now = new Date();
+
     const options = {
       method: "GET",
       url: "https://hotels-com-provider.p.rapidapi.com/v2/hotels/offers",
@@ -223,11 +224,13 @@ class HotelsAPIFetcher {
         domain: "AU",
         locale: "en_AU",
         adults_number: "1",
-        checkin_date: new Date(now.setDate(now.getDate() + numberOfDaysToAdd))
+        checkin_date: new Date(
+          new Date().setDate(now.getDate() + numberOfDaysToAdd)
+        )
           .toISOString()
           .split("T")[0],
         checkout_date: new Date(
-          now.setDate(now.getDate() + numberOfDaysToAdd + 1)
+          new Date().setDate(now.getDate() + numberOfDaysToAdd + 1)
         )
           .toISOString()
           .split("T")[0],

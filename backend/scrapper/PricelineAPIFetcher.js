@@ -12,6 +12,7 @@ class PricelineAPIFetcher {
       long: "",
     };
     this.description = null;
+    this.webUrl = ''
   }
 
   async init() {
@@ -24,8 +25,8 @@ class PricelineAPIFetcher {
         id: this.entityId,
         data: {
           ...this.description,
-          coordinates: this.coordinates,
-        },
+          coordinates: this.coordinates
+                },
       };
   }
 
@@ -35,7 +36,7 @@ class PricelineAPIFetcher {
       url: "https://priceline-com-provider.p.rapidapi.com/v1/hotels/locations",
       params: {
         name: businessName,
-        search_type: "ALL",
+        search_type: "HOTEL",
       },
       headers: {
         "x-rapidapi-key": process.env.RAPID_API_KEY,

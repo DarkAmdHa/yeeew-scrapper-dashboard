@@ -42,6 +42,7 @@ const tripAdvisorAPIDataSchema = new mongoose.Schema(
       rating: Number,
       totalReviews: Number,
       offers: [offerSchema],
+      webUrl: { type: String, default: "N/A" },
     },
   },
   { _id: false }

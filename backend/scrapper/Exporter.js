@@ -76,6 +76,7 @@ class Export {
 
     this.acfExportObject = {
       acf: {
+        banner_width: "Full",
         seo_dynamic_text_string: businessData.overview
           ? businessData.overview
           : "",
@@ -151,7 +152,8 @@ class Export {
         if (this.businessData.scrapedImages.length) {
           await this.processImage(this.businessData.scrapedImages[0]);
         }
-        await this.createBusinessOnYeeew();
+
+        await this.createOrUpdateBusinessOnYeeew();
         await this.addACFFieldsData();
         await this.updateListing();
         await this.updateOperation();
@@ -208,7 +210,7 @@ class Export {
     }
   }
 
-  async createBusinessOnYeeew() {
+  async createOrUpdateBusinessOnYeeew() {
     if (this.featuredImageId) {
       this.exportObject.featured_media = this.featuredImageId;
     }
@@ -216,6 +218,19 @@ class Export {
       let yeeewApiUrl = this.exportToYeeewTest
         ? process.env.YEEEW_DEV_REST_API_URL + "/wp-json/wp/v2/job_listing"
         : process.env.YEEEW_REST_API_URL + "/wp-json/wp/v2/job-listings";
+
+      //Check if already exported:
+      if (
+        (this.exportToYeeewTest && this.businessData.yeeewDevPostId) ||
+        (!this.exportToYeeewTest && this.businessData.yeeewPostId)
+      ) {
+        //Update:
+        yeeewApiUrl += `/${
+          this.exportToYeeewTest
+            ? this.businessData.yeeewDevPostId
+            : this.businessData.yeeewPostId
+        }`;
+      }
       const { data } = await axios.post(yeeewApiUrl, this.exportObject, {
         headers: {
           Authorization: `Basic ${
@@ -229,11 +244,14 @@ class Export {
       this.createdPostID = data.id;
       console.log(`POST ID: ${data.id}`.green.inverse);
     } catch (error) {
-      console.error(colors.red("Error creating business on Yeeew:" + error));
+      console.error(
+        colors.red("Error creating or updating business on Yeeew:" + error)
+      );
 
       if (error.response) {
         await this.logError(
-          "Error creating business on Yeeew:" + error.response.data.message
+          "Error creating or updating business on Yeeew:" +
+            error.response.data.message
             ? error.response.data.message
             : error.message
             ? error.message
@@ -241,7 +259,7 @@ class Export {
         );
       } else {
         await this.logError(
-          "Error creating business on Yeeew:" + error.message
+          "Error creating or updating business on Yeeew:" + error.message
         );
       }
     }
@@ -595,16 +613,6 @@ class Export {
   exportAffiliate() {
     try {
       const affiliates = [];
-      // if (this.businessData.agoda.link) {
-      //   affiliates.push({
-      //     affiliate_name: 1867,
-      //     listing_url: this.businessData.agoda.link
-      //       ? this.businessData.agoda.link
-      //       : null,
-      //     package_price: "",
-      //     package_number_of_days: "",
-      //   });
-      // }
       if (this.businessData.perfectWave.link) {
         affiliates.push({
           affiliate_name: 1862,
@@ -819,6 +827,8 @@ class Export {
               : null,
             listing_url: this.businessData.apiData.agoda?.data?.url
               ? this.businessData.apiData.agoda.data.url
+              : this.businessData.agoda && this.businessData.agoda.link
+              ? this.businessData.agoda.link
               : null,
             ...(agodaPrice && {
               listing_actual_price_per_day: String(agodaPrice),
@@ -830,6 +840,8 @@ class Export {
             affiliate_name: 3878,
             api_id: "https://tripadvisor-com1.p.rapidapi.com",
             affiliate_id: this.businessData.apiData.tripadvisor.id,
+            listing_url:
+              this.businessData.apiData.tripadvisor.data?.webUrl || "",
           });
         }
         if (this.businessData.apiData.hotels) {
@@ -858,6 +870,7 @@ class Export {
             affiliate_name: 3883,
             api_id: "https://priceline-com-provider.p.rapidapi.com",
             affiliate_id: this.businessData.apiData.priceline.id,
+            listing_url: `https://www.priceline.com/hotel-deals/h${this.businessData.apiData.priceline.id}`,
             ...(pricelinePrice && {
               listing_actual_price_per_day: String(pricelinePrice),
             }),
@@ -892,7 +905,9 @@ class Export {
         if (tripPrice) {
           affiliates.push({
             affiliate_name: 3881,
-
+            listing_url: this.businessData.trip
+              ? this.businessData.trip.link
+              : "",
             listing_actual_price_per_day: String(tripPrice),
           });
         }
@@ -1129,21 +1144,36 @@ class Export {
 
   async updateListing() {
     try {
-      const yeeewApiUrl = this.exportToYeeewTest
-        ? process.env.YEEEW_DEV_REST_API_URL
-        : process.env.YEEEW_REST_API_URL;
-
-      const exportedYeeewLink =
-        yeeewApiUrl +
-        `/wp-admin/post.php?post=${this.createdPostID}&action=edit`;
       const listing = await Listing.findByIdAndUpdate(
         this.businessData._id,
         {
-          $push: { exportLinks: exportedYeeewLink },
-          exported: true,
+          ...(this.exportToYeeewTest
+            ? {
+                yeeewDevPostId: this.createdPostID,
+              }
+            : {
+                yeeewPostId: this.createdPostID,
+              }),
         },
-        { new: true } // This option returns the modified document rather than the original
+        { new: true }
       );
+
+      // const yeeewApiUrl = this.exportToYeeewTest
+      //   ? process.env.YEEEW_DEV_REST_API_URL
+      //   : process.env.YEEEW_REST_API_URL;
+
+      // const exportedYeeewLink =
+      //   yeeewApiUrl +
+      //   `/wp-admin/post.php?post=${this.createdPostID}&action=edit`;
+
+      // const listing = await Listing.findByIdAndUpdate(
+      //   this.businessData._id,
+      //   {
+      //     $push: { exportLinks: exportedYeeewLink },
+      //     exported: true,
+      //   },
+      //   { new: true } // This option returns the modified document rather than the original
+      // );
 
       listing.save();
 
