@@ -1084,6 +1084,7 @@ class Scrapper {
         const response = await fetch(imageUrl);
         if (!response.ok) {
           throw new Error("Invalid URL");
+          break;
         }
         const contentType = response.headers.get("content-type");
         if (!contentType || !contentType.startsWith("image/")) {
@@ -1095,13 +1096,15 @@ class Scrapper {
         const fileType = await fileTypeFromBuffer(data);
         const size = imageSize(imageData);
         if (size.width < 750) {
-          throw new Error(
+          console.error(
             "Image of inadequate size: " +
               `width: ${size.width} , height: ${size.height}`
           );
+          break;
         }
         if (!fileType || !fileType.ext) {
-          throw new Error("Image of no type");
+          console.error("Image of no type");
+          break;
         }
 
         const tempFilePath = `./temp/file_${new Date().getTime()}.${
@@ -1140,7 +1143,7 @@ class Scrapper {
         this.totalImagesScrapped += 1;
       } catch (error) {
         console.error(`Error uploading file:${error}`.red);
-        await this.logError(`Error uploading file:${error}`.red);
+        await this.logError(`Error uploading file:${error}`);
       }
     }
 
