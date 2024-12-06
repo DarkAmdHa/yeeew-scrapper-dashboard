@@ -56,7 +56,6 @@ class Scrapper {
           const priceExporter = new PricesExporter(this.businessData);
           await priceExporter.init();
         }
-        console.log(this.scrapedData);
       }
     } catch (error) {
       console.error("Error processing business data:", error);
@@ -170,7 +169,7 @@ class Scrapper {
       listing.scrapedAt = new Date();
       const scrapedFinalData = this.scrapedData.data;
       this.setupBusinessDocumentUpdate(listing, scrapedFinalData);
-      console.log(JSON.stringify(listing));
+      // console.log(JSON.stringify(listing));
 
       await listing.save();
       console.log("Business data saved to the database");
@@ -837,9 +836,9 @@ class Scrapper {
           // Make sure this next link is working. What i mean is, if the next link points to /contact, make sure the returned link is in the form https://google.com/contact ,in this case, the initial site passed to you is google.com.
           // {nextLink: NEXT LINK HERE}
           content: `You will go through a provided code and look for the requested data.
-              If the data is found, return a JSON response with data in 
+              If the data is found, return a JSON response with data in
               {data: FOUND DATA HERE}
-              If instead the data is nowhere to be found, write a nice message saying something like "The email could not be found on this site (Or something along those line) in JSON as 
+              If instead the data is nowhere to be found, write a nice message saying something like "The email could not be found on this site (Or something along those line) in JSON as
               {error: YOU RESPONSE HERE}
               Only reply in the above fashion.
             `,
@@ -872,7 +871,7 @@ class Scrapper {
         );
       }
       const parsedResponse = responseInJson["choices"][0]["message"]["content"];
-      console.log(`Open AI Response: ${parsedResponse}`.green);
+      // console.log(`Open AI Response: ${parsedResponse}`.green);
       // Since our responses are also replied as JSON strings
       return JSON.parse(parsedResponse);
     } catch (er) {
@@ -1220,7 +1219,7 @@ class Scrapper {
         {
           role: "system",
           content: `
-            You will generate SEO rich content describing different business' based on the provided data about them. 
+            You will generate SEO rich content describing different business' based on the provided data about them.
             Reference surfing spots as surf spots and make it sound exciting! write this in the style of William Finnegan's writing
             You will Write it in the third person. Make sure your writing is factual. Write a description of the accommodation.
              You will also be provided with a list of the user's existing site page links, based on which, where possible you will try to link your written content to other relevant existing pages of the user's site.
@@ -1262,7 +1261,7 @@ class Scrapper {
       }
 
       const parsedResponse = responseInJson["choices"][0]["message"]["content"];
-      console.log(`Open AI Response: ${parsedResponse}`.green);
+      // console.log(`Open AI Response: ${parsedResponse}`.green);
       // Since our responses are also replied as JSON strings
       return parsedResponse;
     } catch (er) {
@@ -1311,9 +1310,9 @@ class Scrapper {
         role: "system",
         content: `
           You will go through a provided code and look for the requested data.
-          If the data is found, return a JSON response with data in 
+          If the data is found, return a JSON response with data in
           {data: FOUND DATA HERE}
-          If instead the data is nowhere to be found, write a nice message saying something like "The email could not be found on this site (Or something along those line) in JSON as 
+          If instead the data is nowhere to be found, write a nice message saying something like "The email could not be found on this site (Or something along those line) in JSON as
           {error: YOU RESPONSE HERE}
           Only reply in the above fashion.
         `,
@@ -1325,8 +1324,8 @@ class Scrapper {
       messages.push({
         role: "user",
         content: `Given that this is a booking.com listing, we also need the business' room types details as well as it's property surroundings and all amenities.
-      The data needs to be returned in a specific way assuming it figures on the page. With regard to these three specific fields, please do not assume anything. Only reflect data that already figures on the page. 
-      For the room type, within the data field, return the a 'rooms' key containing an array of objects of the format 
+      The data needs to be returned in a specific way assuming it figures on the page. With regard to these three specific fields, please do not assume anything. Only reflect data that already figures on the page.
+      For the room type, within the data field, return the a 'rooms' key containing an array of objects of the format
       [
         {
             "roomName":"string",
@@ -1342,7 +1341,7 @@ class Scrapper {
         },
       ]
 
-      Property surroundings need to be returned as a key called 'surroundings' which will be an array having the format: 
+      Property surroundings need to be returned as a key called 'surroundings' which will be an array having the format:
         [
           {
               "surroundingType": "string",
@@ -1423,7 +1422,7 @@ class Scrapper {
       }
 
       const parsedResponse = responseInJson["choices"][0]["message"]["content"];
-      console.log(`Open AI Response: ${parsedResponse}`.green);
+      // console.log(`Open AI Response: ${parsedResponse}`.green);
       // Since our responses are also replied as JSON strings
       return parsedResponse;
     } catch (er) {
@@ -1593,10 +1592,6 @@ class Scrapper {
       }
     } catch (error) {
       console.error("Error scraping business details from Google:", error);
-      businessData.errors.push("Error scraping business details from Google");
-      await this.logError(
-        `Error scraping business details from Google: ${error}`
-      );
     }
     return businessData;
   }
@@ -1617,7 +1612,6 @@ class Scrapper {
       businessData.data = mainSiteData;
       businessData.data.imagesFromMain = imagesFromMain;
     } catch (e) {
-      businessData.errors.push("Main Site not working");
       console.log("Main Site not working".red);
       await this.logError(`Main Site not working`);
     }
@@ -1809,17 +1803,10 @@ class Scrapper {
           `Something went wrong while scraping from ${platformName}: ${error.message}`
             .red.inverse
         );
-        businessData.errors.push(
-          `Error while scraping ${platformName}: ${error.message}`
-        );
-
-        await this.logError(
-          `Error while scraping ${platformName}: ${error.message}`
-        );
       }
     }
 
-    console.log(JSON.stringify(businessData));
+    // console.log(JSON.stringify(businessData));
     return businessData;
   }
 

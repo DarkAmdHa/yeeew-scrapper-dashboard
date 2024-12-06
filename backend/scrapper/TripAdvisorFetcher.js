@@ -81,8 +81,7 @@ class TripAdvisorFetcher {
       };
 
       const { data } = await axios.request(options);
-
-      reviews.push(...data.data.reviews);
+      if (data.data && data.data.reviews) reviews.push(...data.data.reviews);
       if (
         data.meta.currentPage == data.meta.totalPage ||
         reviews.length >= 60
@@ -255,7 +254,7 @@ class TripAdvisorFetcher {
         this.offers = parsedOffers;
 
         //Parse links and get main listing url:
-        this.getListingURL(parsedOffers);
+        // this.getListingURL(parsedOffers);
       } else if (
         offersList &&
         !offersList.isComplete &&
@@ -271,31 +270,31 @@ class TripAdvisorFetcher {
     }
   }
 
-  async getListingURL() {
-    try {
-      const browser = await pt.launch();
-      const page = await browser.newPage();
-      await page.setViewport({ width: 1000, height: 500 });
+  // async getListingURL() {
+  //   try {
+  //     const browser = await pt.launch();
+  //     const page = await browser.newPage();
+  //     await page.setViewport({ width: 1000, height: 500 });
 
-      try {
-        await page.goto(link, {
-          waitUntil: "networkidle2",
-          timeout: args && args.timeout ? args.timeout : 30000,
-        });
-      } catch (error) {
-        console.log(error);
+  //     try {
+  //       await page.goto(link, {
+  //         waitUntil: "networkidle2",
+  //         timeout: args && args.timeout ? args.timeout : 30000,
+  //       });
+  //     } catch (error) {
+  //       console.log(error);
 
-        const bodyContent = await page.evaluate(() =>
-          document.body.innerText.trim()
-        );
+  //       const bodyContent = await page.evaluate(() =>
+  //         document.body.innerText.trim()
+  //       );
 
-        if (bodyContent.length === 0) {
-          await browser.close();
-          throw error;
-        }
-      }
-    } catch (error) {}
-  }
+  //       if (bodyContent.length === 0) {
+  //         await browser.close();
+  //         throw error;
+  //       }
+  //     }
+  //   } catch (error) {}
+  // }
 
   async fetchResortDetails() {
     await this.fetchReviews();
