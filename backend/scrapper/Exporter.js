@@ -217,7 +217,7 @@ class Export {
     try {
       let yeeewApiUrl = this.exportToYeeewTest
         ? process.env.YEEEW_DEV_REST_API_URL + "/wp-json/wp/v2/job_listing"
-        : process.env.YEEEW_REST_API_URL + "/wp-json/wp/v2/job-listings";
+        : process.env.YEEEW_REST_API_URL + "/wp-json/wp/v2/job_listing";
 
       //Check if already exported:
       if (
@@ -268,7 +268,7 @@ class Export {
     try {
       const yeeewApiUrl = this.exportToYeeewTest
         ? process.env.YEEEW_DEV_REST_API_URL + "/wp-json/wp/v2/job_listing"
-        : process.env.YEEEW_REST_API_URL + "/wp-json/wp/v2/job-listings";
+        : process.env.YEEEW_REST_API_URL + "/wp-json/wp/v2/job_listing";
 
       await axios.post(
         yeeewApiUrl + `/${this.createdPostID}`,
